@@ -9,7 +9,7 @@
   "scripts": {
     "prepare": "husky install",
     "build": "rimraf dist && tsc -p tsconfig-build.json",
-    "start": "node ./dist/src/main/server.js",
+    "start": "node ./dist/main/server.js",
     "dev": "tsnd --respawn --transpile-only ./src/main/server.ts",
     "debug": "nodemon -L --watch ./dist --inspect=0.0.0.0:9222 --nolazy ./dist/main/server.js",
     "test": "jest --passWithNoTests --silent --runInBand",
@@ -21,7 +21,8 @@
     "@discordjs/opus": "^0.8.0",
     "discord-music-player": "^9.1.1",
     "dotenv": "^16.0.3",
-    "isomorphic-unfetch": "^3.1.0"
+    "isomorphic-unfetch": "^3.1.0",
+    "module-alias": "^2.2.2"
   },
   "devDependencies": {
     "@types/jest": "^29.1.2",

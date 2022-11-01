@@ -1,8 +1,9 @@
+import 'module-alias/register';
 import { ActivityType, Client, GatewayIntentBits } from 'discord.js';
 import { Player, RepeatMode } from 'discord-music-player';
 import 'dotenv/config';
 import { DiscordSendMessage } from '@/data/usecases/send-message/discord-send-message';
-import { makeDiscordSendMessageFactory } from '@/main/factories/usecases/discord/discord-send-message-factory';
+import { makeDiscordSendMessageFactory } from './factories/usecases/discord/discord-send-message-factory';
 
 interface DiscordClient extends Client {
   player: Player;
