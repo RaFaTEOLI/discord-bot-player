@@ -39,21 +39,25 @@ const settings = {
   prefix: process.env.BOT_PREFIX,
   token: process.env.BOT_TOKEN
 };
-void client.login(settings.token);
-
-// Channel Dispatchers
-const musicChannel = client.channels.cache.get(process.env.BOT_MUSIC_CHANNEL ?? '');
-const welcomeChannel = client.channels.cache.get(process.env.BOT_WELCOME_CHANNEL ?? '');
 
 let sendMusicMessage: DiscordSendMessage | null = null;
 let sendWelcomeMessage: DiscordSendMessage | null = null;
 
-if (musicChannel?.isTextBased()) {
-  sendMusicMessage = makeDiscordSendMessageFactory(musicChannel);
-}
-if (welcomeChannel?.isTextBased()) {
-  sendWelcomeMessage = makeDiscordSendMessageFactory(welcomeChannel);
-}
+void (async () => {
+  await client.login(settings.token);
+  // Channel Dispatchers
+  setTimeout(() => {
+    const musicChannel = client.channels.cache.get(process.env.BOT_MUSIC_CHANNEL);
+    const welcomeChannel = client.channels.cache.get(process.env.BOT_WELCOME_CHANNEL);
+
+    if (musicChannel?.isTextBased()) {
+      sendMusicMessage = makeDiscordSendMessageFactory(musicChannel);
+    }
+    if (welcomeChannel?.isTextBased()) {
+      sendWelcomeMessage = makeDiscordSendMessageFactory(welcomeChannel);
+    }
+  }, 5000);
+})();
 
 client.on('messageCreate', async message => {
   // Message Validations
