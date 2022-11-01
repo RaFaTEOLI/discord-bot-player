@@ -259,7 +259,11 @@ client.player
   .on('songAdd', async (queue, song) => {
     console.log(`[INFO] Song ${song} was added to the queue. -> ${queue}`);
     await sendMusicMessage?.send({
-      title: `🎵  Song ${song} was added to the queue.`
+      title: '🎵  Song added to the queue.',
+      fields: {
+        name: 'Song',
+        value: song.name
+      }
     });
   })
   // Emitted when a playlist was added to the queue.
