@@ -69,14 +69,6 @@ describe('RemoteLoadCommandById', () => {
       body: httpResult
     };
     const command = await sut.loadById(faker.datatype.uuid());
-    expect(command).toEqual({
-      command: 'any_command',
-      description: 'any_description',
-      dispatcher: 'any_dispatcher',
-      id: 'any_id',
-      message: 'any_message',
-      response: 'any_response',
-      type: 'any_type'
-    });
+    expect(command).toEqual(httpResult);
   });
 });
