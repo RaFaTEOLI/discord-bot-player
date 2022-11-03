@@ -11,11 +11,22 @@ export class DiscordExecuteCommand implements ExecuteCommand {
   async execute(commandId: string): Promise<void> {
     const command = await this.remoteLoadCommandById.loadById(commandId);
     if (!command) {
-      await this.sendMessageChannel.send({
+      return await this.sendMessageChannel.send({
         title: 'Invalid Command!',
         description: 'The command you tried is invalid!'
       });
     }
-    return null;
+
+    switch (command.type) {
+      case 'message':
+        return await this.sendMessageChannel.send({
+          title: command.response
+        });
+      default:
+        return await this.sendMessageChannel.send({
+          title: 'Invalid Command Type!',
+          description: 'The command type you tried is invalid!'
+        });
+    }
   }
 }
