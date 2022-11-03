@@ -3,6 +3,7 @@ import { HttpClientSpy, mockDiscordSendMessage, mockRemoteLoadCommandById } from
 import { faker } from '@faker-js/faker';
 import { LoadCommandById } from '@/domain/usecases/load-command-by-id';
 import { SendMessage } from '@/domain/usecases/send-message';
+import { mockCommand } from '@/domain/test/mock-command';
 
 type SutTypes = {
   sut: DiscordExecuteCommand;
@@ -37,6 +38,30 @@ describe('DiscordExecuteCommand', () => {
     expect(sendSpy).toHaveBeenCalledWith({
       title: 'Invalid Command!',
       description: 'The command you tried is invalid!'
+    });
+  });
+
+  test('should send message if command type is message', async () => {
+    const { sut, discordSendMessageStub } = makeSut();
+    const sendSpy = jest.spyOn(discordSendMessageStub, 'send');
+
+    await sut.execute(faker.datatype.uuid());
+    expect(sendSpy).toHaveBeenCalledWith({
+      title: 'any_response'
+    });
+  });
+
+  test('should send invalid command type if command type is invalid', async () => {
+    const { sut, remoteLoadCommandByIdStub, discordSendMessageStub } = makeSut();
+    jest
+      .spyOn(remoteLoadCommandByIdStub, 'loadById')
+      .mockResolvedValueOnce(Object.assign({}, mockCommand(), { type: 'invalid' }));
+    const sendSpy = jest.spyOn(discordSendMessageStub, 'send');
+
+    await sut.execute(faker.datatype.uuid());
+    expect(sendSpy).toHaveBeenCalledWith({
+      title: 'Invalid Command Type!',
+      description: 'The command type you tried is invalid!'
     });
   });
 });
