@@ -1,22 +1,30 @@
 import { DiscordExecuteCommand } from './discord-execute-command';
-import { HttpClientSpy, mockDiscordSendMessage, mockRemoteLoadCommandById } from '@/data/test';
+import {
+  HttpClientSpy,
+  mockDiscordPlayMusic,
+  mockDiscordSendMessage,
+  mockRemoteLoadCommandById
+} from '@/data/test';
 import { faker } from '@faker-js/faker';
 import { LoadCommandById } from '@/domain/usecases/load-command-by-id';
 import { SendMessage } from '@/domain/usecases/send-message';
 import { mockCommand } from '@/domain/test/mock-command';
+import { PlayMusic } from '@/domain/usecases/play-music';
 
 type SutTypes = {
   sut: DiscordExecuteCommand;
   remoteLoadCommandByIdStub: LoadCommandById;
   discordSendMessageStub: SendMessage;
+  discordPlayMusicStub: PlayMusic;
 };
 
 const makeSut = (): SutTypes => {
   const discordSendMessageStub = mockDiscordSendMessage();
   const remoteLoadCommandByIdStub = mockRemoteLoadCommandById(faker.internet.url(), new HttpClientSpy());
-  const sut = new DiscordExecuteCommand(remoteLoadCommandByIdStub, discordSendMessageStub);
+  const discordPlayMusicStub = mockDiscordPlayMusic();
+  const sut = new DiscordExecuteCommand(remoteLoadCommandByIdStub, discordSendMessageStub, discordPlayMusicStub);
 
-  return { sut, remoteLoadCommandByIdStub, discordSendMessageStub };
+  return { sut, remoteLoadCommandByIdStub, discordSendMessageStub, discordPlayMusicStub };
 };
 
 describe('DiscordExecuteCommand', () => {
@@ -63,5 +71,17 @@ describe('DiscordExecuteCommand', () => {
       title: 'Invalid Command Type!',
       description: 'The command type you tried is invalid!'
     });
+  });
+
+  test('should call DiscordPlayMusic with correct response if command type is music', async () => {
+    const { sut, remoteLoadCommandByIdStub, discordPlayMusicStub } = makeSut();
+    const fakeCommand = mockCommand();
+    jest
+      .spyOn(remoteLoadCommandByIdStub, 'loadById')
+      .mockResolvedValueOnce(Object.assign({}, fakeCommand, { type: 'music' }));
+    const playSpy = jest.spyOn(discordPlayMusicStub, 'play');
+
+    await sut.execute(fakeCommand.response);
+    expect(playSpy).toHaveBeenCalledWith(fakeCommand.response);
   });
 });
