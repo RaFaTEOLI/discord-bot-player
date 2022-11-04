@@ -52,4 +52,13 @@ describe('DiscordPlayMusic', () => {
     const promise = sut.play(faker.internet.url());
     expect(promise).rejects.toThrow();
   });
+
+  test('should call queue.playlist with correct url if playlist param is true', async () => {
+    const { sut, discordQueue } = makeSut();
+    const playlistSpy = jest.spyOn(discordQueue, 'playlist');
+
+    const url = faker.internet.url();
+    await sut.play(url, true);
+    expect(playlistSpy).toHaveBeenCalledWith(url);
+  });
 });
