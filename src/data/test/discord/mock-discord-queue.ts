@@ -1,3 +1,4 @@
+import { mockDiscordSongModel } from '@/domain/test';
 import { faker } from '@faker-js/faker';
 import {
   Player,
@@ -38,29 +39,11 @@ export const mockDiscordQueue = (): Queue => {
     }
 
     async play(url: string): Promise<any> {
-      return await Promise.resolve({
-        name: 'any_name',
-        author: 'any_author',
-        url: 'any_url',
-        thumbnail: 'any_thumbnail',
-        duration: 'any_duration',
-        isLive: false,
-        isFirst: false,
-        seekTime: 10
-      });
+      return await Promise.resolve(mockDiscordSongModel(url));
     }
 
     async playlist(url: string): Promise<any> {
-      return await Promise.resolve({
-        name: 'any_name',
-        author: 'any_author',
-        url: 'any_url',
-        thumbnail: 'any_thumbnail',
-        duration: 'any_duration',
-        isLive: false,
-        isFirst: false,
-        seekTime: 10
-      });
+      return await Promise.resolve(mockDiscordSongModel(url));
     }
 
     async seek(time: number): Promise<true | Song> {
@@ -68,16 +51,7 @@ export const mockDiscordQueue = (): Queue => {
     }
 
     skip(index?: number): any {
-      return {
-        name: 'any_name',
-        author: 'any_author',
-        url: 'any_url',
-        thumbnail: 'any_thumbnail',
-        duration: 'any_duration',
-        isLive: false,
-        isFirst: false,
-        seekTime: 10
-      };
+      return mockDiscordSongModel();
     }
 
     stop(): void {}
