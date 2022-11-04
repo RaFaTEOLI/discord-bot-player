@@ -1,17 +1,17 @@
 import { ExecuteCommand } from '@/domain/usecases/execute-command';
-import { LoadCommandById } from '@/domain/usecases/load-command-by-id';
+import { LoadCommand } from '@/domain/usecases/load-command';
 import { PlayMusic } from '@/domain/usecases/play-music';
 import { SendMessage } from '@/domain/usecases/send-message';
 
 export class DiscordExecuteCommand implements ExecuteCommand {
   constructor(
-    private readonly remoteLoadCommandById: LoadCommandById,
+    private readonly remoteLoadCommand: LoadCommand,
     private readonly sendMessageChannel: SendMessage,
     private readonly discordPlayMusic: PlayMusic
   ) {}
 
-  async execute(commandId: string): Promise<void> {
-    const command = await this.remoteLoadCommandById.loadById(commandId);
+  async execute(commandValue: string): Promise<void> {
+    const command = await this.remoteLoadCommand.load(commandValue);
     if (!command) {
       return await this.sendMessageChannel.send({
         title: 'Invalid Command!',

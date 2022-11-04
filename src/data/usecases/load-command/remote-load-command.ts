@@ -1,13 +1,13 @@
 import { HttpClient, HttpStatusCode } from '@/data/protocols/http';
 import { AccessDeniedError, UnexpectedError } from '@/domain/errors';
 import { CommandModel } from '@/domain/models/command';
-import { LoadCommandById } from '@/domain/usecases/load-command-by-id';
+import { LoadCommand } from '@/domain/usecases/load-command';
 
-export class RemoteLoadCommandById implements LoadCommandById {
+export class RemoteLoadCommand implements LoadCommand {
   constructor(private readonly url: string, private readonly httpGetClient: HttpClient<CommandModel>) {}
 
-  async loadById(commandId: string): Promise<CommandModel> {
-    const httpResponse = await this.httpGetClient.request({ url: `${this.url}/${commandId}`, method: 'get' });
+  async load(command: string): Promise<CommandModel> {
+    const httpResponse = await this.httpGetClient.request({ url: this.url, method: 'get', params: { command } });
     const remoteCommand = httpResponse.body;
     switch (httpResponse.statusCode) {
       case HttpStatusCode.success:
