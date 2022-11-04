@@ -3,7 +3,7 @@ import { faker } from '@faker-js/faker';
 import { DiscordPlayMusic } from './discord-play-music';
 import { mockDiscordMessage, mockDiscordQueue } from '@/data/test';
 import { Message } from 'discord.js';
-import { Queue } from 'discord-music-player';
+import { Playlist, Queue } from 'discord-music-player';
 
 type SutTypes = {
   sut: DiscordPlayMusic;
@@ -60,5 +60,14 @@ describe('DiscordPlayMusic', () => {
     const url = faker.internet.url();
     await sut.play(url, true);
     expect(playlistSpy).toHaveBeenCalledWith(url);
+  });
+
+  test('should return a playlist on queue.playlist success if playlist param is true', async () => {
+    const { sut } = makeSut();
+    const url = faker.internet.url();
+    const playlist = (await sut.play(url, true)) as Playlist;
+    expect(playlist).toBeTruthy();
+    expect(playlist.url).toBe(url);
+    expect(playlist.songs.length).toBe(2);
   });
 });

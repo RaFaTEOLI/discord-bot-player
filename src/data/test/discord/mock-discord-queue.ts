@@ -1,8 +1,9 @@
-import { mockDiscordSongModel } from '@/domain/test';
+import { mockDiscordPlaylistModel, mockDiscordSongModel } from '@/domain/test';
 import { faker } from '@faker-js/faker';
 import {
   Player,
   PlayerOptions,
+  Playlist,
   ProgressBarOptions,
   Queue,
   RepeatMode,
@@ -38,12 +39,12 @@ export const mockDiscordQueue = (): Queue => {
       return await Promise.resolve();
     }
 
-    async play(url: string): Promise<any> {
+    async play(url: string): Promise<Song> {
       return await Promise.resolve(mockDiscordSongModel(url));
     }
 
-    async playlist(url: string): Promise<any> {
-      return await Promise.resolve(mockDiscordSongModel(url));
+    async playlist(url: string): Promise<Playlist> {
+      return await Promise.resolve(mockDiscordPlaylistModel(url));
     }
 
     async seek(time: number): Promise<true | Song> {
