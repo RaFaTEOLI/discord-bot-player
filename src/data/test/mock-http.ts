@@ -6,7 +6,8 @@ export const mockHttpRequest = (): HttpRequest => ({
   url: faker.internet.url(),
   method: faker.helpers.arrayElement(['get', 'post', 'put', 'delete']),
   body: faker.datatype.json(),
-  headers: faker.datatype.json()
+  headers: faker.datatype.json(),
+  params: faker.datatype.json()
 });
 
 export class HttpClientSpy<R = any> implements HttpClient<R> {
@@ -14,6 +15,7 @@ export class HttpClientSpy<R = any> implements HttpClient<R> {
   method?: string;
   body?: any;
   headers?: any;
+  params?: any;
   response: HttpResponse<R> = {
     statusCode: HttpStatusCode.success
   };
@@ -23,6 +25,7 @@ export class HttpClientSpy<R = any> implements HttpClient<R> {
     this.method = data.method;
     this.body = data.body;
     this.headers = data.headers;
+    this.params = data.params;
     return await Promise.resolve(this.response);
   }
 }
