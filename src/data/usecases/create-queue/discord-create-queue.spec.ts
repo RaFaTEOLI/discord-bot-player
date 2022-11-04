@@ -22,14 +22,14 @@ describe('DiscordCreateQueue', () => {
     const { sut, discordMessage, discordClientStub } = makeSut();
     const createQueueSpy = jest.spyOn(discordClientStub.player, 'createQueue');
 
-    sut.createQueue(discordMessage.guild.id);
+    sut.createQueue();
     expect(createQueueSpy).toHaveBeenCalledWith(discordMessage.guild.id);
   });
 
   test('should return queue on client.player.createQueue success', async () => {
-    const { sut, discordMessage } = makeSut();
+    const { sut } = makeSut();
 
-    const queue = sut.createQueue(discordMessage.guild.id);
+    const queue = sut.createQueue();
     expect(queue).toEqual({});
   });
 });
