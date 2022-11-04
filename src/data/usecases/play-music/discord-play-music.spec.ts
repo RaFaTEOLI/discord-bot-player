@@ -1,30 +1,30 @@
 import { faker } from '@faker-js/faker';
 import { DiscordPlayMusic } from './discord-play-music';
-import { mockDiscordClient, mockDiscordMessage } from '@/data/test';
-import { DiscordClient } from '@/domain/models/discord-client';
+import { mockDiscordMessage, mockDiscordQueue } from '@/data/test';
 import { Message } from 'discord.js';
+import { Queue } from 'discord-music-player';
 
 type SutTypes = {
   sut: DiscordPlayMusic;
   discordMessage: Message;
-  discordClientStub: DiscordClient;
+  discordQueue: Queue;
 };
 
 const makeSut = (): SutTypes => {
-  const discordClientStub = mockDiscordClient();
+  const discordQueue = mockDiscordQueue();
   const discordMessage = mockDiscordMessage();
-  const sut = new DiscordPlayMusic(discordClientStub, discordMessage);
+  const sut = new DiscordPlayMusic(discordQueue, discordMessage);
 
-  return { sut, discordMessage, discordClientStub };
+  return { sut, discordMessage, discordQueue };
 };
 
 describe('DiscordPlayMusic', () => {
-  test('should call client.player.createQueue with message guild id', async () => {
-    const { sut, discordMessage, discordClientStub } = makeSut();
-    const createQueueSpy = jest.spyOn(discordClientStub.player, 'createQueue');
+  test('should call queue.join with voice channel', async () => {
+    const { sut, discordMessage, discordQueue } = makeSut();
+    const joinSpy = jest.spyOn(discordQueue, 'join');
 
     const url = faker.internet.url();
     await sut.play(url);
-    expect(createQueueSpy).toHaveBeenCalledWith(discordMessage.guild.id);
+    expect(joinSpy).toHaveBeenCalledWith(discordMessage.member.voice.channel);
   });
 });
