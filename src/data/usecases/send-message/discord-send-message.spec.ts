@@ -37,7 +37,6 @@ describe('Discord Send Message', () => {
             },
             color: '#0099ff',
             description: 'any_description',
-            fields: [[]],
             title: 'any_title',
             url: 'discord-bot-player.com'
           }
@@ -96,7 +95,6 @@ describe('Discord Send Message', () => {
             },
             color: '#0099ff',
             description: undefined,
-            fields: [[]],
             title: 'any_title',
             url: 'discord-bot-player.com'
           }
@@ -114,5 +112,45 @@ describe('Discord Send Message', () => {
       description: 'any_description'
     });
     await expect(promise).rejects.toThrow();
+  });
+
+  test('should call send with correct values and fields when calling twice', async () => {
+    const { sut, sendMessageChannelStub } = makeSut();
+    const sendSpy = jest.spyOn(sendMessageChannelStub, 'send');
+
+    await sut.send({
+      title: 'any_title',
+      fields: {
+        name: 'test',
+        value: 'value for test'
+      },
+      description: 'any_description'
+    });
+    await sut.send({
+      title: 'any_title',
+      fields: {
+        name: 'another test',
+        value: 'another value for test'
+      },
+      description: 'any_description'
+    });
+    expect(sendSpy).toHaveBeenCalledWith({
+      embeds: [
+        {
+          data: {
+            author: {
+              iconURL: 'https://robohash.org/Test?gravatar=hashed',
+              name: 'Test',
+              url: 'discord-bot-player.com'
+            },
+            color: '#0099ff',
+            description: 'any_description',
+            fields: [{ name: 'another test', value: 'another value for test' }],
+            title: 'any_title',
+            url: 'discord-bot-player.com'
+          }
+        }
+      ]
+    });
   });
 });

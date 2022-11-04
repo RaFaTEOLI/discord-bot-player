@@ -23,7 +23,7 @@ export class DiscordSendMessage implements SendMessage {
         .setDescription(message.description ?? null);
 
       // Clear Fields Before Sending Another Message
-      embed.addFields([]);
+      embed.setFields();
 
       if (message.fields) {
         embed.addFields(message.fields);
