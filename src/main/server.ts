@@ -5,6 +5,7 @@ import 'dotenv/config';
 import { DiscordSendMessage } from '@/data/usecases/send-message/discord-send-message';
 import { makeDiscordSendMessageFactory } from './factories/usecases/discord/discord-send-message-factory';
 import { DiscordClient } from '@/domain/models/discord-client';
+import { makeDiscordExecuteCommandFactory } from './factories/usecases/discord/discord-execute-command-factory';
 
 const client = new Client({
   intents: [
@@ -233,6 +234,9 @@ client.on('messageCreate', async message => {
         });
       }
     }
+
+    const executeCommand = makeDiscordExecuteCommandFactory(client, message);
+    return await executeCommand.execute(command);
   }
 });
 

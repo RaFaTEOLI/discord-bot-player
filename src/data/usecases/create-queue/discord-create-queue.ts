@@ -7,7 +7,7 @@ import { CreateQueue } from '@/domain/usecases/create-queue';
 export class DiscordCreateQueue implements CreateQueue {
   constructor(private readonly client: DiscordClient, private readonly message: Message) {}
 
-  createQueue(guildId: string): Queue {
+  createQueue(): Queue {
     return this.client.player.createQueue(this.message.guild.id);
   }
 }
