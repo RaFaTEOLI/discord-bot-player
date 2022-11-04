@@ -7,7 +7,11 @@ export class RemoteLoadCommand implements LoadCommand {
   constructor(private readonly url: string, private readonly httpGetClient: HttpClient<CommandModel>) {}
 
   async load(command: string): Promise<CommandModel> {
-    const httpResponse = await this.httpGetClient.request({ url: this.url, method: 'get', params: { command } });
+    const httpResponse = await this.httpGetClient.request({
+      url: this.url,
+      method: 'get',
+      params: { name: command }
+    });
     const remoteCommand = httpResponse.body;
     switch (httpResponse.statusCode) {
       case HttpStatusCode.success:

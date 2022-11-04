@@ -32,7 +32,7 @@ describe('RemoteLoadCommand', () => {
     await sut.load(uuid);
     expect(httpClientSpy.url).toBe(url);
     expect(httpClientSpy.method).toBe('get');
-    expect(httpClientSpy.params).toEqual({ command: uuid });
+    expect(httpClientSpy.params).toEqual({ name: uuid });
   });
 
   test('should throw AccessDeniedError if HttpClient returns 403', async () => {
