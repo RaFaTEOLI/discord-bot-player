@@ -6,6 +6,7 @@ import { DiscordSendMessage } from '@/data/usecases/send-message/discord-send-me
 import { makeDiscordSendMessageFactory } from './factories/usecases/discord/discord-send-message-factory';
 import { DiscordClient } from '@/domain/models/discord-client';
 import { makeDiscordExecuteCommandFactory } from './factories/usecases/discord/discord-execute-command-factory';
+import { getErrorMessageFromError } from '@/presentation/helpers/discord-errors';
 
 const client = new Client({
   intents: [
@@ -236,7 +237,12 @@ client.on('messageCreate', async message => {
     }
 
     const executeCommand = makeDiscordExecuteCommandFactory(client, message);
-    return await executeCommand.execute(command);
+    try {
+      return await executeCommand.execute(command);
+    } catch (error) {
+      const errorMessage = getErrorMessageFromError(error);
+      await sendMessage.send(errorMessage);
+    }
   }
 });
 
@@ -269,9 +275,10 @@ client.player
   })
   // Emitted when a playlist was added to the queue.
   .on('playlistAdd', async (queue, playlist) => {
-    console.log(`[INFO] Playlist ${playlist} with ${playlist?.songs?.length} was added to the queue.`);
+    console.log(`[INFO] Playlist ${playlist.name} with ${playlist?.songs?.length} songs was added to the queue.`);
     await sendMusicMessage?.send({
-      title: `🎵  Playlist ${playlist} with ${playlist?.songs?.length} was added to the queue.`
+      title: '🎵  Playlist added!',
+      description: `Playlist ${playlist.name} with ${playlist?.songs?.length} songs was added to the queue.`
     });
   })
   // Emitted when there was no more music to play.
@@ -327,11 +334,6 @@ client.player
   // Emitted when there was an error in runtime
   .on('error', async (error, queue) => {
     console.log(`[ERROR] ${error} in ${queue.guild.name}`);
-    await sendMusicMessage?.send({
-      title: '⛔  Error.',
-      fields: {
-        name: 'message',
-        value: `${error} in ${queue.guild.name}`
-      }
-    });
+    const errorMessage = getErrorMessageFromError(error);
+    await sendMusicMessage.send(errorMessage);
   });
