@@ -248,6 +248,7 @@ client.on('messageCreate', async message => {
 
 // New Member
 client.on('guildMemberAdd', async member => {
+  console.log(`[INFO] New member added: ${member}`);
   await sendWelcomeMessage?.send({
     title: `🙌  Welcome to the server ${member.displayName}`
   });
