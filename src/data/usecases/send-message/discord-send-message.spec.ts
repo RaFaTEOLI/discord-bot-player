@@ -37,6 +37,7 @@ describe('Discord Send Message', () => {
             },
             color: '#0099ff',
             description: 'any_description',
+            fields: [[]],
             title: 'any_title',
             url: 'discord-bot-player.com'
           }
@@ -95,6 +96,7 @@ describe('Discord Send Message', () => {
             },
             color: '#0099ff',
             description: undefined,
+            fields: [[]],
             title: 'any_title',
             url: 'discord-bot-player.com'
           }
@@ -105,9 +107,7 @@ describe('Discord Send Message', () => {
 
   test('should throw exception if send throws exception', async () => {
     const { sut, sendMessageChannelStub } = makeSut();
-    jest
-      .spyOn(sendMessageChannelStub, 'send')
-      .mockRejectedValueOnce(new Error());
+    jest.spyOn(sendMessageChannelStub, 'send').mockRejectedValueOnce(new Error());
 
     const promise = sut.send({
       title: 'any_title',
