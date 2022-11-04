@@ -9,7 +9,7 @@ export class DiscordPlayMusic implements PlayMusic {
   async play(url: string): Promise<Song> {
     try {
       await this.discordQueue.join(this.message.member.voice.channel);
-      return null;
+      return await this.discordQueue.play(url);
     } catch (error) {
       throw new Error('Error while playing music message');
     }
