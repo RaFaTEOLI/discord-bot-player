@@ -21,7 +21,7 @@ export class DiscordExecuteCommand implements ExecuteCommand {
 
     switch (command.type) {
       case 'music':
-        await this.discordPlayMusic.play(command.response);
+        await this.discordPlayMusic.play(command.response, true);
         return;
       case 'message':
         return await this.sendMessageChannel.send({

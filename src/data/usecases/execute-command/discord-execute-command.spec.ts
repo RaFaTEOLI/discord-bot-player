@@ -77,6 +77,6 @@ describe('DiscordExecuteCommand', () => {
     const playSpy = jest.spyOn(discordPlayMusicStub, 'play');
 
     await sut.execute(fakeCommand.response);
-    expect(playSpy).toHaveBeenCalledWith(fakeCommand.response);
+    expect(playSpy).toHaveBeenCalledWith(fakeCommand.response, true);
   });
 });
