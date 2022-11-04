@@ -1,4 +1,3 @@
-import { DiscordClient } from '@/domain/models/discord-client';
 import { faker } from '@faker-js/faker';
 import {
   Player,
@@ -11,7 +10,7 @@ import {
 } from 'discord-music-player';
 import { Guild } from 'discord.js';
 
-export const mockDiscordClient = (): DiscordClient => {
+export const mockDiscordQueue = (): Queue => {
   class DiscordPlayerQueue {
     player: Player;
     guild: Guild;
@@ -115,16 +114,5 @@ export const mockDiscordClient = (): DiscordClient => {
 
     leave(): void {}
   }
-  class DiscordPlayer {
-    createQueue(guildId: string): Queue {
-      return new DiscordPlayerQueue() as Queue;
-    }
-  }
-  class ClientStub {
-    player: Player;
-    constructor() {
-      this.player = new DiscordPlayer() as Player;
-    }
-  }
-  return new ClientStub() as DiscordClient;
+  return new DiscordPlayerQueue() as Queue;
 };

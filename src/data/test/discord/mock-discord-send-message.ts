@@ -1,8 +1,8 @@
 import { SendMessage, SendMessageParams } from '@/domain/usecases/send-message';
 import { EmbedBuilder } from 'discord.js';
-import { SendMessageChannel } from '../protocols/discord/send-message-channel';
-import { mockEmbedBuilder } from './mock-embed-builder';
-import { mockSendMessageChannel } from './mock-send-message-channel';
+import { SendMessageChannel } from '@/data/protocols/discord/send-message-channel';
+import { mockEmbedBuilder } from '@/data/test/mock-embed-builder';
+import { mockSendMessageChannel } from '@/data/test/mock-send-message-channel';
 
 export const mockDiscordSendMessage = (): SendMessage => {
   class DiscordSendMessageStub implements SendMessage {
