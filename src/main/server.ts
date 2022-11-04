@@ -28,7 +28,7 @@ const player = new Player(client, {
 client.player = player;
 
 client.on('ready', () => {
-  console.log(`[INFO] I am ready to Play as ${process.env.BOT_NAME} 🎶`);
+  console.info(`I am ready to Play as ${process.env.BOT_NAME} 🎶`);
   client.user?.setActivity(process.env.BOT_ACTIVITY ?? 'Waiting...', {
     type: ActivityType.Playing
   });
@@ -72,9 +72,9 @@ client.on('messageCreate', async message => {
     const args = message.content.slice(settings?.prefix?.length).trim().split(/ +/g);
     const command = args.shift();
 
-    console.log(`[INFO] Command received: ${command}`);
+    console.info(`Command received: ${command}`);
 
-    console.log(`[INFO] Guild ID: ${message?.guild?.id}`);
+    console.info(`Guild ID: ${message?.guild?.id}`);
     if (message?.guild?.id) {
       const guildQueue = client.player.getQueue(message?.guild?.id);
 
@@ -86,7 +86,7 @@ client.on('messageCreate', async message => {
 
         if (command === 'play') {
           await queue.play(args.join(' ')).catch(err => {
-            console.log(err);
+            console.error(err);
             if (!guildQueue) queue.stop();
           });
           return;
@@ -94,7 +94,7 @@ client.on('messageCreate', async message => {
 
         if (command === 'playlist') {
           await queue.playlist(args.join(' ')).catch(err => {
-            console.log(err);
+            console.error(err);
             if (!guildQueue) queue.stop();
           });
           return;
@@ -147,7 +147,7 @@ client.on('messageCreate', async message => {
       }
 
       if (command === 'getQueue') {
-        console.log(`[INFO] Getting guild queue -> ${guildQueue}`);
+        console.info(`Getting guild queue -> ${guildQueue}`);
 
         const messageObj = {
           title: '🎵  Queue'
@@ -188,7 +188,7 @@ client.on('messageCreate', async message => {
       }
 
       if (command === 'getVolume') {
-        console.log(`[INFO] Getting volume -> ${guildQueue?.volume}`);
+        console.info(`Getting volume -> ${guildQueue?.volume}`);
         await sendMusicMessage?.send({
           title: '🎙️  Volume',
           fields: {
@@ -200,7 +200,7 @@ client.on('messageCreate', async message => {
       }
 
       if (command === 'nowPlaying') {
-        console.log(`[INFO] Now playing: ${guildQueue?.nowPlaying}`);
+        console.info(`Now playing: ${guildQueue?.nowPlaying}`);
         await sendMessage.send({
           title: '🎵  Now Playing',
           fields: { name: 'Song', value: guildQueue?.nowPlaying?.name ?? '' }
@@ -225,7 +225,7 @@ client.on('messageCreate', async message => {
 
       if (command === 'createProgressBar') {
         const ProgressBar = guildQueue?.createProgressBar();
-        console.log(`[INFO] Progress Bar -> ${ProgressBar?.prettier}`);
+        console.info(`Progress Bar -> ${ProgressBar?.prettier}`);
         await sendMusicMessage?.send({
           title: '🎶  Progress Bar',
           fields: {
@@ -248,7 +248,7 @@ client.on('messageCreate', async message => {
 
 // New Member
 client.on('guildMemberAdd', async member => {
-  console.log(`[INFO] New member added: ${member}`);
+  console.info(`New member added: ${member}`);
   await sendWelcomeMessage?.send({
     title: `🙌  Welcome to the server ${member.displayName}`
   });
@@ -258,14 +258,14 @@ client.on('guildMemberAdd', async member => {
 client.player
   // Emitted when channel was empty.
   .on('channelEmpty', async queue => {
-    console.log(`[INFO] Everyone left the Voice Channel, queue ended. -> ${queue}`);
+    console.info(`Everyone left the Voice Channel, queue ended. -> ${queue}`);
     await sendMusicMessage?.send({
       title: '🎵  Everyone left the Voice Channel, queue ended.'
     });
   })
   // Emitted when a song was added to the queue.
   .on('songAdd', async (queue, song) => {
-    console.log(`[INFO] Song ${song} was added to the queue. -> ${queue}`);
+    console.info(`Song ${song} was added to the queue. -> ${queue}`);
     await sendMusicMessage?.send({
       title: '🎵  Song added to the queue.',
       fields: {
@@ -276,7 +276,7 @@ client.player
   })
   // Emitted when a playlist was added to the queue.
   .on('playlistAdd', async (queue, playlist) => {
-    console.log(`[INFO] Playlist ${playlist.name} with ${playlist?.songs?.length} songs was added to the queue.`);
+    console.info(`Playlist ${playlist.name} with ${playlist?.songs?.length} songs was added to the queue.`);
     await sendMusicMessage?.send({
       title: '🎵  Playlist added!',
       description: `Playlist ${playlist.name} with ${playlist?.songs?.length} songs was added to the queue.`
@@ -284,21 +284,21 @@ client.player
   })
   // Emitted when there was no more music to play.
   .on('queueDestroyed', async queue => {
-    console.log(`[INFO] The queue was destroyed. -> ${queue}`);
+    console.info(`The queue was destroyed. -> ${queue}`);
     await sendMusicMessage?.send({
       title: '🎵  Queue was destroyed.'
     });
   })
   // Emitted when the queue was destroyed (either by ending or stopping).
   .on('queueEnd', async queue => {
-    console.log(`[INFO] The queue has ended. -> ${queue}`);
+    console.info(`The queue has ended. -> ${queue}`);
     await sendMusicMessage?.send({
       title: '🎵  The queue has ended.'
     });
   })
   // Emitted when a song changed.
   .on('songChanged', async (queue, newSong, oldSong) => {
-    console.log(`[INFO] ${newSong} is now playing. -> ${queue}`);
+    console.info(`${newSong} is now playing. -> ${queue}`);
     await sendMusicMessage?.send({
       title: '🎵  Now Playing',
       fields: {
@@ -309,7 +309,7 @@ client.player
   })
   // Emitted when a first song in the queue started playing.
   .on('songFirst', async (queue, song) => {
-    console.log(`[INFO] Started playing ${song}. -> ${queue}`);
+    console.info(`Started playing ${song}. -> ${queue}`);
     await sendMusicMessage?.send({
       title: '🎵  Started playing',
       fields: {
@@ -320,21 +320,21 @@ client.player
   })
   // Emitted when someone disconnected the bot from the channel.
   .on('clientDisconnect', async queue => {
-    console.log(`[INFO] I was kicked from the Voice Channel, queue ended. -> ${queue}`);
+    console.info(`I was kicked from the Voice Channel, queue ended. -> ${queue}`);
     await sendMusicMessage?.send({
       title: '😞  I was kicked from the Voice Channel, queue ended.'
     });
   })
   // Emitted when deafenOnJoin is true and the bot was undeafened
   .on('clientUndeafen', async queue => {
-    console.log(`[INFO] I got undefeanded. -> ${queue}`);
+    console.info(`I got undefeanded. -> ${queue}`);
     await sendMusicMessage?.send({
       title: '🎵  I got undefeanded.'
     });
   })
   // Emitted when there was an error in runtime
   .on('error', async (error, queue) => {
-    console.log(`[ERROR] ${error} in ${queue.guild.name}`);
+    console.error(`${error} in ${queue.guild.name}`);
     const errorMessage = getErrorMessageFromError(error);
     await sendMusicMessage.send(errorMessage);
   });
