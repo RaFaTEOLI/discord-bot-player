@@ -4,10 +4,7 @@ import { Player, RepeatMode } from 'discord-music-player';
 import 'dotenv/config';
 import { DiscordSendMessage } from '@/data/usecases/send-message/discord-send-message';
 import { makeDiscordSendMessageFactory } from './factories/usecases/discord/discord-send-message-factory';
-
-interface DiscordClient extends Client {
-  player: Player;
-}
+import { DiscordClient } from '@/domain/models/discord-client';
 
 const client = new Client({
   intents: [
