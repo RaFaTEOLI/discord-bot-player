@@ -30,7 +30,10 @@ export class DiscordExecuteCommand implements ExecuteCommand {
 
       const messageTitle = commandValue === 'showPlaylists' ? '📀  Playlists' : this.bot.description;
 
-      return await this.sendMessageChannel.send({ title: messageTitle, fields: commandFields });
+      return await this.sendMessageChannel.send({
+        title: messageTitle,
+        fields: commandFields.length ? commandFields : [{ name: 'Message', value: 'Nothing found!' }]
+      });
     }
 
     const command = await this.remoteLoadCommand.load(commandValue);
