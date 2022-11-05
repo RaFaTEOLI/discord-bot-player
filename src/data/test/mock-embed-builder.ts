@@ -61,6 +61,10 @@ export const mockEmbedBuilder = (): EmbedBuilder => {
     }
 
     setFields(...fields: RestOrArray<APIEmbedField>): this {
+      if (!fields.length) {
+        delete this.data.fields;
+        console.log('deleted', this.data);
+      }
       return this;
     }
 
@@ -111,18 +115,16 @@ export const mockEmbedBuilder = (): EmbedBuilder => {
     }
 
     addFields(...fields: RestOrArray<APIEmbedField>): this {
+      const fieldsToAdd = this.data.fields ?? [];
+      const newFields = fieldsToAdd.concat(fields as APIEmbedField[]);
       this.data = {
         ...this.data,
-        fields: fields as APIEmbedField[]
+        fields: newFields
       };
       return this;
     }
 
-    spliceFields(
-      index: number,
-      deleteCount: number,
-      ...fields: APIEmbedField[]
-    ): this {
+    spliceFields(index: number, deleteCount: number, ...fields: APIEmbedField[]): this {
       return this;
     }
 
