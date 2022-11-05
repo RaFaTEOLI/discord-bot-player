@@ -64,6 +64,13 @@ describe('DiscordErrors', () => {
       description: 'Oops! Resource Unavailable!'
     });
   });
+  test('should return Something went wrong! Try again later error message', () => {
+    const errorMessage = getErrorMessageFromError('UnexpectedError: Something went wrong! Try again later');
+    expect(errorMessage).toEqual({
+      title: errorTitle,
+      description: 'Something went wrong! Try again later'
+    });
+  });
   test('should return default error message', () => {
     const errorMessage = getErrorMessageFromError('UNKNOWN');
     expect(errorMessage).toEqual({
