@@ -101,4 +101,15 @@ describe('DiscordExecuteCommand', () => {
     await sut.execute('test');
     expect(loadCommandsSpy).toHaveBeenCalled();
   });
+
+  test('should send message with list of commands if command is bot name', async () => {
+    const { sut, bot, discordSendMessageStub } = makeSut();
+    const sendSpy = jest.spyOn(discordSendMessageStub, 'send');
+
+    await sut.execute('test');
+    expect(sendSpy).toHaveBeenCalledWith({
+      title: bot.description,
+      fields: [{ name: 'any_command', value: 'any_description' }]
+    });
+  });
 });
