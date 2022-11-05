@@ -37,7 +37,11 @@ client.on('ready', () => {
 
 const settings = {
   prefix: process.env.BOT_PREFIX,
-  token: process.env.BOT_TOKEN
+  token: process.env.BOT_TOKEN,
+  bot: {
+    name: process.env.BOT_NAME,
+    description: process.env.BOT_DESCRIPTION
+  }
 };
 
 let sendMusicMessage: DiscordSendMessage | null = null;
