@@ -7,6 +7,7 @@ import { makeDiscordSendMessageFactory } from './factories/usecases/discord/disc
 import { DiscordClient } from '@/domain/models/discord-client';
 import { makeDiscordExecuteCommandFactory } from './factories/usecases/discord/discord-execute-command-factory';
 import { getErrorMessageFromError } from '@/presentation/helpers/discord-errors';
+import { PlayerModel } from '@/domain/models/player';
 
 const client = new Client({
   intents: [
@@ -35,7 +36,7 @@ client.on('ready', () => {
   });
 });
 
-const settings = {
+const settings: PlayerModel = {
   prefix: process.env.BOT_PREFIX,
   token: process.env.BOT_TOKEN,
   bot: {
@@ -242,7 +243,7 @@ client.on('messageCreate', async message => {
       }
     }
 
-    const executeCommand = makeDiscordExecuteCommandFactory(client, message, settings.bot);
+    const executeCommand = makeDiscordExecuteCommandFactory(client, message, settings);
     try {
       return await executeCommand.execute(command);
     } catch (error) {

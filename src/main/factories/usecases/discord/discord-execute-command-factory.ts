@@ -1,5 +1,4 @@
 import { DiscordExecuteCommand } from '@/data/usecases/execute-command/discord-execute-command';
-import { BotModel } from '@/domain/models/bot';
 import { DiscordClient } from '@/domain/models/discord-client';
 import { Message } from 'discord.js';
 import { makeRemoteLoadCommandFactory } from '@/main/factories/usecases/remote/remote-load-command-factory';
@@ -7,11 +6,12 @@ import { makeRemoteLoadCommandsFactory } from '@/main/factories/usecases/remote/
 import { makeDiscordCreateQueueFactory } from './discord-create-queue-factory';
 import { makeDiscordPlayMusicFactory } from './discord-play-music-factory';
 import { makeDiscordSendMessageFactory } from './discord-send-message-factory';
+import { PlayerModel } from '@/domain/models/player';
 
 export const makeDiscordExecuteCommandFactory = (
   client: DiscordClient,
   message: Message,
-  botSettings: BotModel
+  playerSettings: PlayerModel
 ): DiscordExecuteCommand => {
   const remoteLoadCommand = makeRemoteLoadCommandFactory();
   const discordQueue = makeDiscordCreateQueueFactory(client, message);
@@ -23,7 +23,7 @@ export const makeDiscordExecuteCommandFactory = (
     remoteLoadCommand,
     discordSendMessage,
     discordPlayMusic,
-    botSettings,
+    playerSettings,
     remoteLoadCommands
   );
   return executeCommand;

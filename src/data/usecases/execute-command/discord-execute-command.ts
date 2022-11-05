@@ -1,5 +1,5 @@
-import { BotModel } from '@/domain/models/bot';
 import { CommandModel } from '@/domain/models/command';
+import { PlayerModel } from '@/domain/models/player';
 import { ExecuteCommand } from '@/domain/usecases/execute-command';
 import { LoadCommand } from '@/domain/usecases/load-command';
 import { LoadCommands } from '@/domain/usecases/load-commands';
@@ -11,12 +11,15 @@ export class DiscordExecuteCommand implements ExecuteCommand {
     private readonly remoteLoadCommand: LoadCommand,
     private readonly sendMessageChannel: SendMessage,
     private readonly discordPlayMusic: PlayMusic,
-    private readonly bot: BotModel,
+    private readonly playerSettings: PlayerModel,
     private readonly remoteLoadCommands: LoadCommands
   ) {}
 
   async execute(commandValue: string): Promise<void> {
-    if (commandValue.toLowerCase() === this.bot.name.toLowerCase() || commandValue === 'showPlaylists') {
+    if (
+      commandValue.toLowerCase() === this.playerSettings.bot.name.toLowerCase() ||
+      commandValue === 'showPlaylists'
+    ) {
       const remoteCommands = await this.remoteLoadCommands.load();
 
       const query =
@@ -26,9 +29,10 @@ export class DiscordExecuteCommand implements ExecuteCommand {
 
       const commandFields = remoteCommands
         .filter(query)
-        .map(command => ({ name: command.command, value: command.description }));
+        .map(command => ({ name: `${this.playerSettings.prefix}${command.command}`, value: command.description }));
 
-      const messageTitle = commandValue === 'showPlaylists' ? '📀  Playlists' : this.bot.description;
+      const messageTitle =
+        commandValue === 'showPlaylists' ? '📀  Playlists' : this.playerSettings.bot.description;
 
       return await this.sendMessageChannel.send({
         title: messageTitle,
