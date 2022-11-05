@@ -1,18 +1,18 @@
 import { HttpClientSpy } from '@/data/test';
-import { RemoteLoadCommand } from './remote-load-command';
+import { RemoteLoadCommands } from './remote-load-commands';
 import { HttpStatusCode } from '@/data/protocols/http';
 import { AccessDeniedError, UnexpectedError } from '@/domain/errors';
 import { faker } from '@faker-js/faker';
-import { mockCommand } from '@/domain/test/mock-command';
+import { mockCommand, mockCommandData } from '@/domain/test/mock-command';
 
 type SutTypes = {
-  sut: RemoteLoadCommand;
+  sut: RemoteLoadCommands;
   httpClientSpy: HttpClientSpy;
 };
 
 const makeSut = (url = faker.internet.url()): SutTypes => {
   const httpClientSpy = new HttpClientSpy();
-  const sut = new RemoteLoadCommand(url, httpClientSpy);
+  const sut = new RemoteLoadCommands(url, httpClientSpy);
 
   return {
     sut,
@@ -20,7 +20,7 @@ const makeSut = (url = faker.internet.url()): SutTypes => {
   };
 };
 
-describe('RemoteLoadCommand', () => {
+describe('RemoteLoadCommands', () => {
   test('should call HttpClient with correct URL and Method', async () => {
     const url = faker.internet.url();
     const { sut, httpClientSpy } = makeSut(url);
@@ -28,11 +28,9 @@ describe('RemoteLoadCommand', () => {
       statusCode: HttpStatusCode.success,
       body: mockCommand()
     };
-    const uuid = faker.datatype.uuid();
-    await sut.load(uuid);
+    await sut.load();
     expect(httpClientSpy.url).toBe(url);
     expect(httpClientSpy.method).toBe('get');
-    expect(httpClientSpy.params).toEqual({ name: uuid });
   });
 
   test('should throw AccessDeniedError if HttpClient returns 403', async () => {
@@ -40,7 +38,7 @@ describe('RemoteLoadCommand', () => {
     httpClientSpy.response = {
       statusCode: HttpStatusCode.forbidden
     };
-    const promise = sut.load(faker.datatype.uuid());
+    const promise = sut.load();
     await expect(promise).rejects.toThrow(new AccessDeniedError());
   });
 
@@ -49,7 +47,7 @@ describe('RemoteLoadCommand', () => {
     httpClientSpy.response = {
       statusCode: HttpStatusCode.notFound
     };
-    const promise = sut.load(faker.datatype.uuid());
+    const promise = sut.load();
     await expect(promise).rejects.toThrow(new UnexpectedError());
   });
 
@@ -58,27 +56,27 @@ describe('RemoteLoadCommand', () => {
     httpClientSpy.response = {
       statusCode: HttpStatusCode.serverError
     };
-    const promise = sut.load(faker.datatype.uuid());
+    const promise = sut.load();
     await expect(promise).rejects.toThrow(new UnexpectedError());
   });
 
-  test('should return a Command if HttpClient returns 200', async () => {
+  test('should return an array of Commands if HttpClient returns 200', async () => {
     const { sut, httpClientSpy } = makeSut();
-    const httpResult = mockCommand();
+    const httpResult = mockCommandData();
     httpClientSpy.response = {
       statusCode: HttpStatusCode.success,
       body: httpResult
     };
-    const command = await sut.load(faker.datatype.uuid());
+    const command = await sut.load();
     expect(command).toEqual(httpResult);
   });
 
-  test('should return null if HttpClient returns 204', async () => {
+  test('should return an empty array if HttpClient returns 204', async () => {
     const { sut, httpClientSpy } = makeSut();
     httpClientSpy.response = {
       statusCode: HttpStatusCode.noContent
     };
-    const command = await sut.load(faker.datatype.uuid());
-    expect(command).toBeNull();
+    const command = await sut.load();
+    expect(command).toEqual([]);
   });
 });

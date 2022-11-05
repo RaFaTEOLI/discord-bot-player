@@ -46,7 +46,9 @@ export const getErrorMessageFromError = (error: any): { title: string; descripti
     case 'Status code: 410':
       errorMessage = 'Oops! Resource Unavailable!';
       break;
-    // Thrown when the Guild Queue does not exist (no music is playing).
+    case 'UnexpectedError: Something went wrong! Try again later':
+      errorMessage = 'Something went wrong! Try again later';
+      break;
     default:
       errorTitle = '❌  Unknown Error';
       errorMessage = 'Unknown Error';

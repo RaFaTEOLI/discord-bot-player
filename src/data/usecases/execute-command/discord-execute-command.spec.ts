@@ -3,23 +3,48 @@ import { HttpClientSpy, mockDiscordPlayMusic, mockDiscordSendMessage, mockRemote
 import { faker } from '@faker-js/faker';
 import { LoadCommand } from '@/domain/usecases/load-command';
 import { SendMessage } from '@/domain/usecases/send-message';
-import { mockCommand } from '@/domain/test/mock-command';
+import { mockCommand, mockCommandData } from '@/domain/test/mock-command';
 import { PlayMusic } from '@/domain/usecases/play-music';
+import { mockRemoteLoadCommands } from '@/data/test/mock-remote-load-commands';
+import { LoadCommands } from '@/domain/usecases/load-commands';
+import { CommandModel } from '@/domain/models/command';
+import { mockPlayerModel } from '@/domain/test/mock-player';
+import { PlayerModel } from '@/domain/models/player';
 
 type SutTypes = {
   sut: DiscordExecuteCommand;
   remoteLoadCommandStub: LoadCommand;
   discordSendMessageStub: SendMessage;
   discordPlayMusicStub: PlayMusic;
+  player: PlayerModel;
+  remoteLoadCommandsStub: LoadCommands;
+  fakeCommands: CommandModel[];
 };
 
 const makeSut = (): SutTypes => {
   const discordSendMessageStub = mockDiscordSendMessage();
   const remoteLoadCommandStub = mockRemoteLoadCommand(faker.internet.url(), new HttpClientSpy());
   const discordPlayMusicStub = mockDiscordPlayMusic();
-  const sut = new DiscordExecuteCommand(remoteLoadCommandStub, discordSendMessageStub, discordPlayMusicStub);
+  const player = mockPlayerModel();
+  const fakeCommands = mockCommandData();
+  const remoteLoadCommandsStub = mockRemoteLoadCommands(faker.internet.url(), new HttpClientSpy(), fakeCommands);
+  const sut = new DiscordExecuteCommand(
+    remoteLoadCommandStub,
+    discordSendMessageStub,
+    discordPlayMusicStub,
+    player,
+    remoteLoadCommandsStub
+  );
 
-  return { sut, remoteLoadCommandStub, discordSendMessageStub, discordPlayMusicStub };
+  return {
+    sut,
+    remoteLoadCommandStub,
+    discordSendMessageStub,
+    discordPlayMusicStub,
+    player,
+    remoteLoadCommandsStub,
+    fakeCommands
+  };
 };
 
 describe('DiscordExecuteCommand', () => {
@@ -78,5 +103,47 @@ describe('DiscordExecuteCommand', () => {
 
     await sut.execute(fakeCommand.response);
     expect(playSpy).toHaveBeenCalledWith(fakeCommand.response, true);
+  });
+
+  test('should call LoadCommands if command is bot name', async () => {
+    const { sut, remoteLoadCommandsStub } = makeSut();
+    const loadCommandsSpy = jest.spyOn(remoteLoadCommandsStub, 'load');
+
+    await sut.execute('test');
+    expect(loadCommandsSpy).toHaveBeenCalled();
+  });
+
+  test('should send message with list of commands if command is bot name', async () => {
+    const { sut, player, discordSendMessageStub } = makeSut();
+    const sendSpy = jest.spyOn(discordSendMessageStub, 'send');
+
+    await sut.execute('test');
+    expect(sendSpy).toHaveBeenCalledWith({
+      title: player.bot.description,
+      fields: [{ name: `${player.prefix}any_command`, value: 'any_description' }]
+    });
+  });
+
+  test('should send message with list of playlists if command is showPlaylists', async () => {
+    const { sut, player, discordSendMessageStub, fakeCommands } = makeSut();
+    const sendSpy = jest.spyOn(discordSendMessageStub, 'send');
+
+    await sut.execute('showPlaylists');
+    expect(sendSpy).toHaveBeenCalledWith({
+      title: '📀  Playlists',
+      fields: [{ name: `${player.prefix}${fakeCommands[1].command}`, value: fakeCommands[1].description }]
+    });
+  });
+
+  test('should send not found message if RemoteLoadCommands returns empty array', async () => {
+    const { sut, discordSendMessageStub, remoteLoadCommandsStub } = makeSut();
+    jest.spyOn(remoteLoadCommandsStub, 'load').mockResolvedValueOnce([]);
+    const sendSpy = jest.spyOn(discordSendMessageStub, 'send');
+
+    await sut.execute('showPlaylists');
+    expect(sendSpy).toHaveBeenCalledWith({
+      title: '📀  Playlists',
+      fields: [{ name: 'Message', value: 'Nothing found!' }]
+    });
   });
 });

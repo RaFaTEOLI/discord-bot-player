@@ -2,7 +2,6 @@ import { EmbedBuilder } from 'discord.js';
 import 'dotenv/config';
 import { SendMessage, SendMessageParams } from '@/domain/usecases/send-message';
 import { SendMessageChannel } from '@/data/protocols/discord/send-message-channel';
-
 export class DiscordSendMessage implements SendMessage {
   constructor(
     private readonly sendMessageChannel: SendMessageChannel,
@@ -26,7 +25,11 @@ export class DiscordSendMessage implements SendMessage {
       embed.setFields();
 
       if (message.fields) {
-        embed.addFields(message.fields);
+        if (Array.isArray(message.fields)) {
+          message.fields.forEach(field => embed.addFields(field));
+        } else {
+          embed.addFields(message.fields);
+        }
       }
 
       await this.sendMessageChannel.send({ embeds: [embed] });

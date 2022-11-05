@@ -153,4 +153,51 @@ describe('Discord Send Message', () => {
       ]
     });
   });
+
+  test('should call send with correct values and array of fields', async () => {
+    const { sut, sendMessageChannelStub } = makeSut();
+    const sendSpy = jest.spyOn(sendMessageChannelStub, 'send');
+
+    await sut.send({
+      title: 'any_title',
+      fields: [
+        {
+          name: 'test',
+          value: 'value for test'
+        },
+        {
+          name: 'test 2',
+          value: 'value for test 2'
+        }
+      ],
+      description: 'any_description'
+    });
+    expect(sendSpy).toHaveBeenCalledWith({
+      embeds: [
+        {
+          data: {
+            author: {
+              iconURL: 'https://robohash.org/Test?gravatar=hashed',
+              name: 'Test',
+              url: 'discord-bot-player.com'
+            },
+            color: '#0099ff',
+            description: 'any_description',
+            fields: [
+              {
+                name: 'test',
+                value: 'value for test'
+              },
+              {
+                name: 'test 2',
+                value: 'value for test 2'
+              }
+            ],
+            title: 'any_title',
+            url: 'discord-bot-player.com'
+          }
+        }
+      ]
+    });
+  });
 });
