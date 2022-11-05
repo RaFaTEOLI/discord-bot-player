@@ -16,6 +16,8 @@ export class RemoteLoadCommand implements LoadCommand {
     switch (httpResponse.statusCode) {
       case HttpStatusCode.success:
         return remoteCommand;
+      case HttpStatusCode.noContent:
+        return null;
       case HttpStatusCode.forbidden:
         throw new AccessDeniedError();
       default:
