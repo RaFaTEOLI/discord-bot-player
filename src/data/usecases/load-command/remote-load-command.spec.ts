@@ -72,4 +72,13 @@ describe('RemoteLoadCommand', () => {
     const command = await sut.load(faker.datatype.uuid());
     expect(command).toEqual(httpResult);
   });
+
+  test('should return null if HttpClient returns 204', async () => {
+    const { sut, httpClientSpy } = makeSut();
+    httpClientSpy.response = {
+      statusCode: HttpStatusCode.noContent
+    };
+    const command = await sut.load(faker.datatype.uuid());
+    expect(command).toBeNull();
+  });
 });
