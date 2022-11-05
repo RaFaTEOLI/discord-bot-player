@@ -70,4 +70,13 @@ describe('RemoteLoadCommands', () => {
     const command = await sut.load();
     expect(command).toEqual(httpResult);
   });
+
+  test('should return an empty array if HttpClient returns 204', async () => {
+    const { sut, httpClientSpy } = makeSut();
+    httpClientSpy.response = {
+      statusCode: HttpStatusCode.noContent
+    };
+    const command = await sut.load();
+    expect(command).toEqual([]);
+  });
 });
