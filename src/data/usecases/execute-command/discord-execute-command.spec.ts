@@ -134,4 +134,16 @@ describe('DiscordExecuteCommand', () => {
       fields: [{ name: fakeCommands[1].command, value: fakeCommands[1].description }]
     });
   });
+
+  test('should send not found message if RemoteLoadCommands returns empty array', async () => {
+    const { sut, discordSendMessageStub, remoteLoadCommandsStub } = makeSut();
+    jest.spyOn(remoteLoadCommandsStub, 'load').mockResolvedValueOnce([]);
+    const sendSpy = jest.spyOn(discordSendMessageStub, 'send');
+
+    await sut.execute('showPlaylists');
+    expect(sendSpy).toHaveBeenCalledWith({
+      title: '📀  Playlists',
+      fields: [{ name: 'Message', value: 'Nothing found!' }]
+    });
+  });
 });
