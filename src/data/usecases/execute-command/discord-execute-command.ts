@@ -16,8 +16,13 @@ export class DiscordExecuteCommand implements ExecuteCommand {
 
   async execute(commandValue: string): Promise<void> {
     if (commandValue.toLowerCase() === this.bot.name.toLowerCase()) {
-      await this.remoteLoadCommands.load();
-      return;
+      const remoteCommands = await this.remoteLoadCommands.load();
+
+      const commandFields = remoteCommands
+        .filter(command => command.type !== 'music')
+        .map(command => ({ name: command.command, value: command.description }));
+
+      return await this.sendMessageChannel.send({ title: this.bot.description, fields: commandFields });
     }
 
     const command = await this.remoteLoadCommand.load(commandValue);
