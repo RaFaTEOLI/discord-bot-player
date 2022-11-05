@@ -31,7 +31,7 @@ client.player = player;
 client.on('ready', () => {
   console.info(`I am ready to Play as ${process.env.BOT_NAME} 🎶`);
   client.user?.setActivity(process.env.BOT_ACTIVITY ?? 'Waiting...', {
-    type: ActivityType.Playing
+    type: ActivityType.Listening
   });
 });
 
