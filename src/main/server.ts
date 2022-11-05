@@ -13,7 +13,8 @@ const client = new Client({
     GatewayIntentBits.Guilds,
     GatewayIntentBits.GuildMessages,
     GatewayIntentBits.GuildVoiceStates,
-    GatewayIntentBits.MessageContent
+    GatewayIntentBits.MessageContent,
+    GatewayIntentBits.GuildMembers
   ]
 }) as DiscordClient;
 
@@ -229,10 +230,11 @@ client.on('messageCreate', async message => {
         await sendMusicMessage?.send({
           title: '🎶  Progress Bar',
           fields: {
-            name: '',
-            value: ProgressBar?.prettier?.toString() ?? ''
+            name: 'Progress Bar',
+            value: ProgressBar?.prettier ?? '[==============>][0:00/0:00]'
           }
         });
+        return;
       }
     }
 
@@ -278,7 +280,7 @@ client.player
   .on('playlistAdd', async (queue, playlist) => {
     console.info(`Playlist ${playlist.name} with ${playlist?.songs?.length} songs was added to the queue.`);
     await sendMusicMessage?.send({
-      title: '🎵  Playlist added!',
+      title: '🎵  Playlist Added!',
       description: `Playlist ${playlist.name} with ${playlist?.songs?.length} songs was added to the queue.`
     });
   })
@@ -309,9 +311,9 @@ client.player
   })
   // Emitted when a first song in the queue started playing.
   .on('songFirst', async (queue, song) => {
-    console.info(`Started playing ${song}. -> ${queue}`);
+    console.info(`Started Playing ${song}. -> ${JSON.stringify(queue)}`);
     await sendMusicMessage?.send({
-      title: '🎵  Started playing',
+      title: '🎵  Started Playing',
       fields: {
         name: 'Song',
         value: song.name
