@@ -9,3 +9,5 @@ export const mockCommand = (): CommandModel => ({
   response: 'any_response',
   message: 'any_message'
 });
+
+export const mockCommandData = (): CommandModel[] => [mockCommand(), mockCommand()];
