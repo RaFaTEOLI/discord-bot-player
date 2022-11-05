@@ -52,4 +52,13 @@ describe('AxiosHttpClient', () => {
     const promise = sut.request(mockHttpRequest());
     expect(promise).toEqual(mockedAxios.request.mock.results[0].value);
   });
+
+  test('should return unable to connect error', () => {
+    const { sut, mockedAxios } = makeSut();
+    mockedAxios.request.mockRejectedValueOnce({
+      code: 'ECONNREFUSED'
+    });
+    const promise = sut.request(mockHttpRequest());
+    expect(promise).toEqual(mockedAxios.request.mock.results[0].value);
+  });
 });

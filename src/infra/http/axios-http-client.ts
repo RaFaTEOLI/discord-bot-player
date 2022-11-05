@@ -13,6 +13,15 @@ export class AxiosHttpClient implements HttpClient {
         params: data.params
       });
     } catch (error) {
+      if (error.code === 'ECONNREFUSED') {
+        console.error('Unable to connect to API Server');
+        return {
+          statusCode: 500,
+          body: {
+            error: 'Unable to connect to API Server'
+          }
+        };
+      }
       axiosResponse = error.response;
     }
     return {
