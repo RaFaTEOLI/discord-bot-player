@@ -5,21 +5,35 @@ import { LoadCommand } from '@/domain/usecases/load-command';
 import { SendMessage } from '@/domain/usecases/send-message';
 import { mockCommand } from '@/domain/test/mock-command';
 import { PlayMusic } from '@/domain/usecases/play-music';
+import { mockBotModel } from '@/domain/test';
+import { mockRemoteLoadCommands } from '@/data/test/mock-remote-load-commands';
+import { BotModel } from '@/domain/models/bot';
+import { LoadCommands } from '@/domain/usecases/load-commands';
 
 type SutTypes = {
   sut: DiscordExecuteCommand;
   remoteLoadCommandStub: LoadCommand;
   discordSendMessageStub: SendMessage;
   discordPlayMusicStub: PlayMusic;
+  bot: BotModel;
+  remoteLoadCommandsStub: LoadCommands;
 };
 
 const makeSut = (): SutTypes => {
   const discordSendMessageStub = mockDiscordSendMessage();
   const remoteLoadCommandStub = mockRemoteLoadCommand(faker.internet.url(), new HttpClientSpy());
   const discordPlayMusicStub = mockDiscordPlayMusic();
-  const sut = new DiscordExecuteCommand(remoteLoadCommandStub, discordSendMessageStub, discordPlayMusicStub);
+  const bot = mockBotModel();
+  const remoteLoadCommandsStub = mockRemoteLoadCommands(faker.internet.url(), new HttpClientSpy());
+  const sut = new DiscordExecuteCommand(
+    remoteLoadCommandStub,
+    discordSendMessageStub,
+    discordPlayMusicStub,
+    bot,
+    remoteLoadCommandsStub
+  );
 
-  return { sut, remoteLoadCommandStub, discordSendMessageStub, discordPlayMusicStub };
+  return { sut, remoteLoadCommandStub, discordSendMessageStub, discordPlayMusicStub, bot, remoteLoadCommandsStub };
 };
 
 describe('DiscordExecuteCommand', () => {
@@ -78,5 +92,13 @@ describe('DiscordExecuteCommand', () => {
 
     await sut.execute(fakeCommand.response);
     expect(playSpy).toHaveBeenCalledWith(fakeCommand.response, true);
+  });
+
+  test('should call LoadCommands if command is bot name', async () => {
+    const { sut, remoteLoadCommandsStub } = makeSut();
+    const loadCommandsSpy = jest.spyOn(remoteLoadCommandsStub, 'load');
+
+    await sut.execute('test');
+    expect(loadCommandsSpy).toHaveBeenCalled();
   });
 });
