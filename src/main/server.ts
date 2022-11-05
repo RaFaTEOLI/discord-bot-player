@@ -242,10 +242,11 @@ client.on('messageCreate', async message => {
       }
     }
 
-    const executeCommand = makeDiscordExecuteCommandFactory(client, message);
+    const executeCommand = makeDiscordExecuteCommandFactory(client, message, settings.bot);
     try {
       return await executeCommand.execute(command);
     } catch (error) {
+      console.error(error);
       const errorMessage = getErrorMessageFromError(error);
       await sendMessage.send(errorMessage);
     }
