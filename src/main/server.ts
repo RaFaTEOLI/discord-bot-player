@@ -1,6 +1,6 @@
 import 'module-alias/register';
 import { ActivityType, Client, GatewayIntentBits } from 'discord.js';
-import { Player, RepeatMode } from 'discord-music-player';
+import { Player, RepeatMode, Song } from 'discord-music-player';
 import 'dotenv/config';
 import { DiscordSendMessage } from '@/data/usecases/send-message/discord-send-message';
 import { makeDiscordSendMessageFactory } from './factories/usecases/discord/discord-send-message-factory';
@@ -9,6 +9,8 @@ import { makeDiscordExecuteCommandFactory } from './factories/usecases/discord/d
 import { getErrorMessageFromError } from '@/presentation/helpers/discord-errors';
 import { PlayerModel } from '@/domain/models/player';
 import { makeRemoteSaveMusicFactory } from './factories/usecases/remote/remote-save-music-factory';
+import { makeRemoteSaveQueueFactory } from './factories/usecases/remote/remote-save-queue-factory';
+import { Queue } from '@/domain/models/queue';
 
 const client = new Client({
   intents: [
@@ -64,6 +66,8 @@ void (async () => {
     }
   }, 5000);
 })();
+
+const remoteSaveQueue = makeRemoteSaveQueueFactory();
 
 client.on('messageCreate', async message => {
   // Message Validations
@@ -159,6 +163,8 @@ client.on('messageCreate', async message => {
         const messageObj = {
           title: '🎵  Queue'
         };
+
+        await remoteSaveQueue.save({ songs: mapQueue(guildQueue?.songs) });
 
         const fields: any = [];
         guildQueue?.songs.forEach((song, i) => {
@@ -265,6 +271,15 @@ client.on('guildMemberAdd', async member => {
 
 const remoteSaveMusic = makeRemoteSaveMusicFactory();
 
+const mapQueue = (songs: Song[]): Queue =>
+  songs.map(song => ({
+    name: song.name,
+    author: song.author,
+    duration: song.duration,
+    thumbnail: song.thumbnail,
+    url: song.url
+  })) as Queue;
+
 // Init the event listener only once (at the top of your code).
 client.player
   // Emitted when channel was empty.
@@ -285,6 +300,7 @@ client.player
         value: song.name
       }
     });
+    await remoteSaveQueue.save({ songs: mapQueue(queue.songs) });
   })
   // Emitted when a playlist was added to the queue.
   .on('playlistAdd', async (queue, playlist) => {
@@ -293,6 +309,7 @@ client.player
       title: '🎵  Playlist Added!',
       description: `Playlist ${playlist.name} with ${playlist?.songs?.length} songs was added to the queue.`
     });
+    await remoteSaveQueue.save({ songs: mapQueue(queue.songs) });
   })
   // Emitted when there was no more music to play.
   .on('queueDestroyed', async queue => {
@@ -300,6 +317,7 @@ client.player
     await sendMusicMessage?.send({
       title: '🎵  Queue was destroyed.'
     });
+    await remoteSaveQueue.save({ songs: [] });
   })
   // Emitted when the queue was destroyed (either by ending or stopping).
   .on('queueEnd', async queue => {
@@ -308,6 +326,7 @@ client.player
       title: '🎵  The queue has ended.'
     });
     await remoteSaveMusic.save({ name: null });
+    await remoteSaveQueue.save({ songs: [] });
   })
   // Emitted when a song changed.
   .on('songChanged', async (queue, newSong, oldSong) => {
@@ -320,6 +339,7 @@ client.player
       }
     });
     await remoteSaveMusic.save({ name: newSong.name });
+    await remoteSaveQueue.save({ songs: mapQueue(queue.songs) });
   })
   // Emitted when a first song in the queue started playing.
   .on('songFirst', async (queue, song) => {
@@ -340,6 +360,7 @@ client.player
       title: '😞  I was kicked from the Voice Channel, queue ended.'
     });
     await remoteSaveMusic.save({ name: null });
+    await remoteSaveQueue.save({ songs: [] });
   })
   // Emitted when deafenOnJoin is true and the bot was undeafened
   .on('clientUndeafen', async queue => {
