@@ -22,6 +22,7 @@ export class AxiosHttpClient implements HttpClient {
           }
         };
       }
+      console.error(error);
       axiosResponse = error.response;
     }
     return {
