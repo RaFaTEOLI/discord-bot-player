@@ -1,7 +1,7 @@
-import { Song } from 'discord-music-player';
+import { Queue } from '../models/queue';
 
 export type SaveQueueParams = {
-  songs: Song[];
+  songs: Queue | [];
 };
 
 export interface SaveQueue {
