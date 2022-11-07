@@ -1,5 +1,5 @@
 export type SaveMusicParams = {
-  name: string;
+  name: string | null;
 };
 
 export interface SaveMusic {

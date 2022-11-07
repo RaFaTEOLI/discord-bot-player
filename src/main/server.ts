@@ -8,6 +8,7 @@ import { DiscordClient } from '@/domain/models/discord-client';
 import { makeDiscordExecuteCommandFactory } from './factories/usecases/discord/discord-execute-command-factory';
 import { getErrorMessageFromError } from '@/presentation/helpers/discord-errors';
 import { PlayerModel } from '@/domain/models/player';
+import { makeRemoteSaveMusicFactory } from './factories/usecases/remote/remote-save-music-factory';
 
 const client = new Client({
   intents: [
@@ -262,6 +263,8 @@ client.on('guildMemberAdd', async member => {
   });
 });
 
+const remoteSaveMusic = makeRemoteSaveMusicFactory();
+
 // Init the event listener only once (at the top of your code).
 client.player
   // Emitted when channel was empty.
@@ -270,6 +273,7 @@ client.player
     await sendMusicMessage?.send({
       title: '🎵  Everyone left the Voice Channel, queue ended.'
     });
+    await remoteSaveMusic.save({ name: null });
   })
   // Emitted when a song was added to the queue.
   .on('songAdd', async (queue, song) => {
@@ -303,6 +307,7 @@ client.player
     await sendMusicMessage?.send({
       title: '🎵  The queue has ended.'
     });
+    await remoteSaveMusic.save({ name: null });
   })
   // Emitted when a song changed.
   .on('songChanged', async (queue, newSong, oldSong) => {
@@ -314,10 +319,11 @@ client.player
         value: newSong.name
       }
     });
+    await remoteSaveMusic.save({ name: newSong.name });
   })
   // Emitted when a first song in the queue started playing.
   .on('songFirst', async (queue, song) => {
-    console.info(`Started Playing ${song}. -> ${JSON.stringify(queue)}`);
+    console.info(`Started Playing ${song}`);
     await sendMusicMessage?.send({
       title: '🎵  Started Playing',
       fields: {
@@ -325,6 +331,7 @@ client.player
         value: song.name
       }
     });
+    await remoteSaveMusic.save({ name: song.name });
   })
   // Emitted when someone disconnected the bot from the channel.
   .on('clientDisconnect', async queue => {
@@ -332,6 +339,7 @@ client.player
     await sendMusicMessage?.send({
       title: '😞  I was kicked from the Voice Channel, queue ended.'
     });
+    await remoteSaveMusic.save({ name: null });
   })
   // Emitted when deafenOnJoin is true and the bot was undeafened
   .on('clientUndeafen', async queue => {
