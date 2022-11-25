@@ -34,6 +34,7 @@ export class DiscordSendMessage implements SendMessage {
 
       await this.sendMessageChannel.send({ embeds: [embed] });
     } catch (error) {
+      console.error(error);
       throw new Error('Error while sending message');
     }
   }
