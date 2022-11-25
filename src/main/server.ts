@@ -288,7 +288,7 @@ client.player
     await sendMusicMessage?.send({
       title: '🎵  Everyone left the Voice Channel, queue ended.'
     });
-    await remoteSaveMusic.save({ name: null });
+    await remoteSaveMusic.save({ name: null, duration: null });
   })
   // Emitted when a song was added to the queue.
   .on('songAdd', async (queue, song) => {
@@ -325,7 +325,7 @@ client.player
     await sendMusicMessage?.send({
       title: '🎵  The queue has ended.'
     });
-    await remoteSaveMusic.save({ name: null });
+    await remoteSaveMusic.save({ name: null, duration: null });
     await remoteSaveQueue.save({ songs: [] });
   })
   // Emitted when a song changed.
@@ -338,7 +338,7 @@ client.player
         value: newSong.name
       }
     });
-    await remoteSaveMusic.save({ name: newSong.name });
+    await remoteSaveMusic.save({ name: newSong.name, duration: newSong.duration });
     await remoteSaveQueue.save({ songs: mapQueue(queue.songs) });
   })
   // Emitted when a first song in the queue started playing.
@@ -351,7 +351,7 @@ client.player
         value: song.name
       }
     });
-    await remoteSaveMusic.save({ name: song.name });
+    await remoteSaveMusic.save({ name: song.name, duration: song.duration });
   })
   // Emitted when someone disconnected the bot from the channel.
   .on('clientDisconnect', async queue => {
@@ -359,7 +359,7 @@ client.player
     await sendMusicMessage?.send({
       title: '😞  I was kicked from the Voice Channel, queue ended.'
     });
-    await remoteSaveMusic.save({ name: null });
+    await remoteSaveMusic.save({ name: null, duration: null });
     await remoteSaveQueue.save({ songs: [] });
   })
   // Emitted when deafenOnJoin is true and the bot was undeafened
