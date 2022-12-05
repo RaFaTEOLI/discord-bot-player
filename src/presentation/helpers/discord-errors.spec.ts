@@ -11,6 +11,10 @@ describe('DiscordErrors', () => {
     const errorMessage = getErrorMessageFromError('InvalidPlaylist');
     expect(errorMessage).toEqual({ title: '🎵  Playlist Not Found', description: 'Cannot find this playlist!' });
   });
+  test('should return InvalidPlaylist error message', () => {
+    const errorMessage = getErrorMessageFromError('There was no Playlist found with that link.');
+    expect(errorMessage).toEqual({ title: '🎵  Playlist Not Found', description: 'Cannot find this playlist!' });
+  });
   test('should return InvalidSpotify error message', () => {
     const errorMessage = getErrorMessageFromError('InvalidSpotify');
     expect(errorMessage).toEqual({ title: '🎵  Song Not Found', description: 'Cannot find this song!' });

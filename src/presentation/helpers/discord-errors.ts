@@ -2,7 +2,7 @@ export const getErrorMessageFromError = (error: any): { title: string; descripti
   let errorTitle = '⛔  Error.';
   let errorMessage = error as string;
 
-  switch (error) {
+  switch (error.toString()) {
     // Thrown when the YouTube search could not find any song with that query.
     case 'SearchIsNull':
       errorTitle = '🎵  Song Not Found';
@@ -10,6 +10,11 @@ export const getErrorMessageFromError = (error: any): { title: string; descripti
       break;
     // Thrown when the provided YouTube Playlist could not be found.
     case 'InvalidPlaylist':
+      errorTitle = '🎵  Playlist Not Found';
+      errorMessage = 'Cannot find this playlist!';
+      break;
+    // Thrown when the provided YouTube Playlist could not be found.
+    case 'There was no Playlist found with that link.':
       errorTitle = '🎵  Playlist Not Found';
       errorMessage = 'Cannot find this playlist!';
       break;
