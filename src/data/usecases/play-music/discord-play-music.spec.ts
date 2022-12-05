@@ -59,7 +59,7 @@ describe('DiscordPlayMusic', () => {
 
     const url = faker.internet.url();
     await sut.play(url, true);
-    expect(playlistSpy).toHaveBeenCalledWith(url);
+    expect(playlistSpy).toHaveBeenCalledWith(url, { shuffle: true });
   });
 
   test('should return a playlist on queue.playlist success if playlist param is true', async () => {
