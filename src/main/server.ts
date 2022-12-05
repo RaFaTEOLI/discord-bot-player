@@ -106,7 +106,6 @@ client.on('messageCreate', async message => {
         if (command === 'playlist') {
           await queue
             .playlist(args.join(' '), {
-              maxSongs: -1,
               shuffle: true
             })
             .catch(err => {
