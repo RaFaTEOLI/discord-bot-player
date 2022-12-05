@@ -9,9 +9,7 @@ export class DiscordPlayMusic implements PlayMusic {
   async play(url: string, playlist?: boolean): Promise<Song | Playlist> {
     await this.discordQueue.join(this.message.member.voice.channel);
     if (playlist) {
-      return await this.discordQueue.playlist(url, {
-        shuffle: true
-      });
+      return await this.discordQueue.playlist(url);
     }
     return await this.discordQueue.play(url);
   }

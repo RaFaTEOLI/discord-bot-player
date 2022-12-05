@@ -104,14 +104,10 @@ client.on('messageCreate', async message => {
         }
 
         if (command === 'playlist') {
-          await queue
-            .playlist(args.join(' '), {
-              shuffle: true
-            })
-            .catch(err => {
-              console.error(err);
-              if (!guildQueue) queue.stop();
-            });
+          await queue.playlist(args.join(' ')).catch(err => {
+            console.error(err);
+            if (!guildQueue) queue.stop();
+          });
           return;
         }
       }
