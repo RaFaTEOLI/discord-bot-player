@@ -84,6 +84,7 @@ client.on('messageCreate', async message => {
     const command = args.shift();
 
     console.info(`Command received: ${command}`);
+    console.info(`Arguments received: ${args}`);
 
     console.info(`Guild ID: ${message?.guild?.id}`);
     if (message?.guild?.id) {
@@ -113,7 +114,8 @@ client.on('messageCreate', async message => {
       }
 
       if (command === 'skip') {
-        guildQueue?.skip();
+        const skipIndex = Number(args);
+        guildQueue?.skip(Number.isInteger(skipIndex) ? skipIndex : undefined);
         return;
       }
 
