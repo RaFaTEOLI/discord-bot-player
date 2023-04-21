@@ -330,7 +330,7 @@ client.player
   })
   // Emitted when a song changed.
   .on('songChanged', async (queue, newSong, oldSong) => {
-    console.info(`${newSong} is now playing. -> ${queue}`);
+    console.info(`${newSong} is now playing`);
     await sendMusicMessage?.send({
       title: '🎵  Now Playing',
       fields: {
