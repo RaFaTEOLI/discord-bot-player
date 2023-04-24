@@ -4,7 +4,7 @@ export type SendMessageParams = {
   title: string;
   description?: string;
   fields?: APIEmbedField | APIEmbedField[];
-  buttons?: [{ label: string; customId: string; style: ButtonStyle }];
+  buttons?: Array<{ label: string; customId: string; style: ButtonStyle }>;
 };
 
 export type SendMessageEmbedParams = string | Message | MessageCreateOptions;
