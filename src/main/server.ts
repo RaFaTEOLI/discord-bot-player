@@ -1,5 +1,5 @@
 import 'module-alias/register';
-import { ActivityType, Client, GatewayIntentBits } from 'discord.js';
+import { ActivityType, ButtonInteraction, Client, GatewayIntentBits, Message } from 'discord.js';
 import { Player, RepeatMode, Song } from 'discord-music-player';
 import 'dotenv/config';
 import { DiscordSendMessage } from '@/data/usecases/send-message/discord-send-message';
@@ -79,9 +79,21 @@ client.on('messageCreate', async message => {
   // Send message to current channel
   const sendMessage = makeDiscordSendMessageFactory(message.channel);
 
+  await handleCommands(message, sendMessage);
+});
+
+client.on('interactionCreate', async (message: ButtonInteraction) => {
+  await handleCommands(message);
+});
+
+const handleCommands = async (
+  message: Message | ButtonInteraction,
+  sendMessage?: DiscordSendMessage
+): Promise<void> => {
   if (message) {
-    const args = message.content.slice(settings?.prefix?.length).trim().split(/ +/g);
-    const command = args.shift();
+    const args =
+      message instanceof Message ? message.content.slice(settings?.prefix?.length).trim().split(/ +/g) : [];
+    const command = message instanceof Message ? args.shift() : message.customId;
 
     console.info(`Command received: ${command}`);
     console.info(`Arguments received: ${args}`);
@@ -90,7 +102,7 @@ client.on('messageCreate', async message => {
     if (message?.guild?.id) {
       const guildQueue = client.player.getQueue(message?.guild?.id);
 
-      if (command === 'play' || command === 'playlist') {
+      if (message instanceof Message && (command === 'play' || command === 'playlist')) {
         const queue = client.player.createQueue(message.guild.id);
         if (message?.member?.voice?.channel) {
           await queue.join(message?.member?.voice?.channel);
@@ -252,16 +264,18 @@ client.on('messageCreate', async message => {
       }
     }
 
-    const executeCommand = makeDiscordExecuteCommandFactory(client, message, settings);
-    try {
-      return await executeCommand.execute(command);
-    } catch (error) {
-      console.error(error);
-      const errorMessage = getErrorMessageFromError(error);
-      await sendMessage.send(errorMessage);
+    if (message instanceof Message) {
+      const executeCommand = makeDiscordExecuteCommandFactory(client, message, settings);
+      try {
+        return await executeCommand.execute(command);
+      } catch (error) {
+        console.error(error);
+        const errorMessage = getErrorMessageFromError(error);
+        await sendMessage.send(errorMessage);
+      }
     }
   }
-});
+};
 
 // New Member
 client.on('guildMemberAdd', async member => {
