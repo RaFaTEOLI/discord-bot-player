@@ -6,7 +6,7 @@ export class DiscordSendMessage implements SendMessage {
   constructor(
     private readonly sendMessageChannel: SendMessageChannel,
     private readonly embedBuilder: EmbedBuilder,
-    private readonly buttonBuilder: ButtonBuilder,
+    private readonly buttonBuilder: () => ButtonBuilder,
     private readonly actionRowBuilder: ActionRowBuilder<ButtonBuilder>
   ) {}
 
@@ -34,15 +34,26 @@ export class DiscordSendMessage implements SendMessage {
         }
       }
 
-      const components = [];
+      let actionRowBuilder;
       if (message.buttons) {
-        const buttons = message.buttons.map(button =>
-          this.buttonBuilder.setCustomId(button.customId).setLabel(button.label).setStyle(button.style)
-        );
-        components.push(this.actionRowBuilder.addComponents(buttons));
+        actionRowBuilder = this.actionRowBuilder;
+
+        for (const button of message.buttons) {
+          const buttonBuilder = this.buttonBuilder();
+
+          const buttonComponent = buttonBuilder
+            .setCustomId(button.customId)
+            .setLabel(button.label)
+            .setStyle(button.style);
+
+          actionRowBuilder = actionRowBuilder.addComponents(buttonComponent);
+        }
       }
 
-      await this.sendMessageChannel.send({ embeds: [embed], ...(components.length && { components }) });
+      await this.sendMessageChannel.send({
+        embeds: [embed],
+        ...(actionRowBuilder && { components: [actionRowBuilder] })
+      });
     } catch (error) {
       console.error(error);
       throw new Error('Error while sending message');

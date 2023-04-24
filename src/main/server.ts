@@ -1,5 +1,5 @@
 import 'module-alias/register';
-import { ActivityType, ButtonInteraction, Client, GatewayIntentBits, Message } from 'discord.js';
+import { ActivityType, ButtonInteraction, ButtonStyle, Client, GatewayIntentBits, Message } from 'discord.js';
 import { Player, RepeatMode, Song } from 'discord-music-player';
 import 'dotenv/config';
 import { DiscordSendMessage } from '@/data/usecases/send-message/discord-send-message';
@@ -69,23 +69,6 @@ void (async () => {
 
 const remoteSaveQueue = makeRemoteSaveQueueFactory();
 
-client.on('messageCreate', async message => {
-  // Message Validations
-  if (message.author.bot && message.author.username !== `${process.env.BOT_NAME} Web`) {
-    return;
-  }
-  if (!message.content.startsWith(settings?.prefix ?? '!')) return;
-
-  // Send message to current channel
-  const sendMessage = makeDiscordSendMessageFactory(message.channel);
-
-  await handleCommands(message, sendMessage);
-});
-
-client.on('interactionCreate', async (message: ButtonInteraction) => {
-  await handleCommands(message);
-});
-
 const handleCommands = async (
   message: Message | ButtonInteraction,
   sendMessage?: DiscordSendMessage
@@ -93,7 +76,7 @@ const handleCommands = async (
   if (message) {
     const args =
       message instanceof Message ? message.content.slice(settings?.prefix?.length).trim().split(/ +/g) : [];
-    const command = message instanceof Message ? args.shift() : message.customId;
+    const command = message instanceof Message ? args.shift() : message.customId.split(';')[0];
 
     console.info(`Command received: ${command}`);
     console.info(`Arguments received: ${args}`);
@@ -277,6 +260,23 @@ const handleCommands = async (
   }
 };
 
+client.on('messageCreate', async message => {
+  // Message Validations
+  if (message.author.bot && message.author.username !== `${process.env.BOT_NAME} Web`) {
+    return;
+  }
+  if (!message.content.startsWith(settings?.prefix ?? '!')) return;
+
+  // Send message to current channel
+  const sendMessage = makeDiscordSendMessageFactory(message.channel);
+
+  await handleCommands(message, sendMessage);
+});
+
+client.on('interactionCreate', async (message: ButtonInteraction) => {
+  await handleCommands(message);
+});
+
 // New Member
 client.on('guildMemberAdd', async member => {
   console.info(`New member added: ${member}`);
@@ -352,7 +352,24 @@ client.player
       fields: {
         name: 'Song',
         value: newSong.name
-      }
+      },
+      buttons: [
+        {
+          label: 'Stop',
+          customId: 'stop',
+          style: ButtonStyle.Danger
+        },
+        {
+          label: 'Pause',
+          customId: 'pause',
+          style: ButtonStyle.Secondary
+        },
+        {
+          label: 'Skip',
+          customId: 'skip',
+          style: ButtonStyle.Success
+        }
+      ]
     });
     await remoteSaveMusic.save({ name: newSong.name, duration: newSong.duration });
     await remoteSaveQueue.save({ songs: mapQueue(queue.songs) });
@@ -365,7 +382,24 @@ client.player
       fields: {
         name: 'Song',
         value: song.name
-      }
+      },
+      buttons: [
+        {
+          label: 'Stop',
+          customId: 'stop',
+          style: ButtonStyle.Danger
+        },
+        {
+          label: 'Pause',
+          customId: 'pause',
+          style: ButtonStyle.Secondary
+        },
+        {
+          label: 'Skip',
+          customId: 'skip',
+          style: ButtonStyle.Success
+        }
+      ]
     });
     await remoteSaveMusic.save({ name: song.name, duration: song.duration });
   })
