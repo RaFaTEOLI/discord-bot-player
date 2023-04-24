@@ -1,11 +1,13 @@
-import { EmbedBuilder } from 'discord.js';
+import { ButtonBuilder, EmbedBuilder, ActionRowBuilder } from 'discord.js';
 import 'dotenv/config';
 import { SendMessage, SendMessageParams } from '@/domain/usecases/send-message';
 import { SendMessageChannel } from '@/data/protocols/discord/send-message-channel';
 export class DiscordSendMessage implements SendMessage {
   constructor(
     private readonly sendMessageChannel: SendMessageChannel,
-    private readonly embedBuilder: EmbedBuilder
+    private readonly embedBuilder: EmbedBuilder,
+    private readonly buttonBuilder: ButtonBuilder,
+    private readonly actionRowBuilder: ActionRowBuilder<ButtonBuilder>
   ) {}
 
   async send(message: SendMessageParams): Promise<void> {
@@ -32,7 +34,15 @@ export class DiscordSendMessage implements SendMessage {
         }
       }
 
-      await this.sendMessageChannel.send({ embeds: [embed] });
+      const components = [];
+      if (message.buttons) {
+        const buttons = message.buttons.map(button =>
+          this.buttonBuilder.setCustomId(button.customId).setLabel(button.label).setStyle(button.style)
+        );
+        components.push(this.actionRowBuilder.addComponents(buttons));
+      }
+
+      await this.sendMessageChannel.send({ embeds: [embed], ...(components.length && { components }) });
     } catch (error) {
       console.error(error);
       throw new Error('Error while sending message');
