@@ -274,6 +274,7 @@ client.on('messageCreate', async message => {
 });
 
 client.on('interactionCreate', async (message: ButtonInteraction) => {
+  await message.deferUpdate();
   await handleCommands(message);
 });
 
