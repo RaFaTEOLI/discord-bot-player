@@ -322,4 +322,63 @@ describe('Discord Send Message', () => {
       ]
     });
   });
+
+  test('should call send with correct components when calling twice', async () => {
+    const { sut, sendMessageChannelStub } = makeSut();
+    const sendSpy = jest.spyOn(sendMessageChannelStub, 'send');
+
+    await sut.send({
+      title: 'any_title',
+      buttons: [
+        { label: 'test label', customId: 'testId', style: ButtonStyle.Primary },
+        { label: 'test label 2', customId: 'testId2', style: ButtonStyle.Primary }
+      ],
+      description: 'any_description'
+    });
+    await sut.send({
+      title: 'any_title',
+      buttons: [
+        { label: 'test label', customId: 'testId', style: ButtonStyle.Primary },
+        { label: 'test label 2', customId: 'testId2', style: ButtonStyle.Primary }
+      ],
+      description: 'any_description'
+    });
+
+    const calledWith = JSON.parse(JSON.stringify(sendSpy.mock.calls[0][0]));
+
+    expect(calledWith).toEqual({
+      embeds: [
+        {
+          author: {
+            iconURL: 'https://robohash.org/Test?gravatar=hashed',
+            name: 'Test',
+            url: 'discord-bot-player.com'
+          },
+          color: '#0099ff',
+          description: 'any_description',
+          title: 'any_title',
+          url: 'discord-bot-player.com'
+        }
+      ],
+      components: [
+        {
+          components: [
+            {
+              custom_id: 'testId',
+              label: 'test label',
+              style: 1,
+              type: 2
+            },
+            {
+              custom_id: 'testId2',
+              label: 'test label 2',
+              style: 1,
+              type: 2
+            }
+          ],
+          type: 1
+        }
+      ]
+    });
+  });
 });
