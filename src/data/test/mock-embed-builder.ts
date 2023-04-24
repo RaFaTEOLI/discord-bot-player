@@ -63,7 +63,6 @@ export const mockEmbedBuilder = (): EmbedBuilder => {
     setFields(...fields: RestOrArray<APIEmbedField>): this {
       if (!fields.length) {
         delete this.data.fields;
-        console.log('deleted', this.data);
       }
       return this;
     }
