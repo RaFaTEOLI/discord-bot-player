@@ -34,6 +34,9 @@ export class DiscordSendMessage implements SendMessage {
         }
       }
 
+      // Clear Components Before Sending Another Message
+      this.actionRowBuilder.setComponents();
+
       let actionRowBuilder;
       if (message.buttons) {
         actionRowBuilder = this.actionRowBuilder;
