@@ -49,6 +49,10 @@ export class DiscordSendMessage implements SendMessage {
             .setLabel(button.label)
             .setStyle(button.style);
 
+          if (button.emoji) {
+            buttonComponent.setEmoji(button.emoji);
+          }
+
           actionRowBuilder = actionRowBuilder.addComponents(buttonComponent);
         }
       }
