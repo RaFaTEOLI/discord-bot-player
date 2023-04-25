@@ -1,8 +1,10 @@
 import {
+  ButtonBuilder,
   EmbedBuilder,
   GuildTextBasedChannel,
   If,
-  TextBasedChannel
+  TextBasedChannel,
+  ActionRowBuilder
 } from 'discord.js';
 import { SendMessageChannel } from '@/data/protocols/discord/send-message-channel';
 import { DiscordSendMessage } from '@/data/usecases/send-message/discord-send-message';
@@ -12,7 +14,9 @@ export const makeDiscordSendMessageFactory = (
 ): DiscordSendMessage => {
   const sendMessage = new DiscordSendMessage(
     channel as SendMessageChannel,
-    new EmbedBuilder()
+    new EmbedBuilder(),
+    () => new ButtonBuilder(),
+    new ActionRowBuilder<ButtonBuilder>()
   );
   return sendMessage;
 };
