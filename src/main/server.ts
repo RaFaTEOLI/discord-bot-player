@@ -1,16 +1,16 @@
 import 'module-alias/register';
-import { ActivityType, ButtonInteraction, ButtonStyle, Client, GatewayIntentBits, Message } from 'discord.js';
+import { ActivityType, ButtonInteraction, Client, GatewayIntentBits, Message } from 'discord.js';
 import { Player, RepeatMode, Song } from 'discord-music-player';
 import 'dotenv/config';
 import { DiscordSendMessage } from '@/data/usecases/send-message/discord-send-message';
 import { makeDiscordSendMessageFactory } from './factories/usecases/discord/discord-send-message-factory';
 import { DiscordClient } from '@/domain/models/discord-client';
 import { makeDiscordExecuteCommandFactory } from './factories/usecases/discord/discord-execute-command-factory';
-import { getErrorMessageFromError } from '@/presentation/helpers/discord-errors';
 import { PlayerModel } from '@/domain/models/player';
 import { makeRemoteSaveMusicFactory } from './factories/usecases/remote/remote-save-music-factory';
 import { makeRemoteSaveQueueFactory } from './factories/usecases/remote/remote-save-queue-factory';
 import { Queue } from '@/domain/models/queue';
+import { playerButtons, getErrorMessageFromError } from '@/presentation/helpers';
 
 const client = new Client({
   intents: [
@@ -354,23 +354,7 @@ client.player
         name: 'Song',
         value: newSong.name
       },
-      buttons: [
-        {
-          label: 'Stop',
-          customId: 'stop',
-          style: ButtonStyle.Danger
-        },
-        {
-          label: 'Pause',
-          customId: 'pause',
-          style: ButtonStyle.Secondary
-        },
-        {
-          label: 'Skip',
-          customId: 'skip',
-          style: ButtonStyle.Success
-        }
-      ]
+      buttons: playerButtons
     });
     await remoteSaveMusic.save({ name: newSong.name, duration: newSong.duration });
     await remoteSaveQueue.save({ songs: mapQueue(queue.songs) });
@@ -384,23 +368,7 @@ client.player
         name: 'Song',
         value: song.name
       },
-      buttons: [
-        {
-          label: 'Stop',
-          customId: 'stop',
-          style: ButtonStyle.Danger
-        },
-        {
-          label: 'Pause',
-          customId: 'pause',
-          style: ButtonStyle.Secondary
-        },
-        {
-          label: 'Skip',
-          customId: 'skip',
-          style: ButtonStyle.Success
-        }
-      ]
+      buttons: playerButtons
     });
     await remoteSaveMusic.save({ name: song.name, duration: song.duration });
   })
