@@ -1,13 +1,16 @@
 import 'module-alias/register';
-import { ActivityType, Client, GatewayIntentBits } from 'discord.js';
-import { Player, RepeatMode } from 'discord-music-player';
+import { ActivityType, ButtonInteraction, Client, GatewayIntentBits, Message } from 'discord.js';
+import { Player, RepeatMode, Song } from 'discord-music-player';
 import 'dotenv/config';
 import { DiscordSendMessage } from '@/data/usecases/send-message/discord-send-message';
 import { makeDiscordSendMessageFactory } from './factories/usecases/discord/discord-send-message-factory';
 import { DiscordClient } from '@/domain/models/discord-client';
 import { makeDiscordExecuteCommandFactory } from './factories/usecases/discord/discord-execute-command-factory';
-import { getErrorMessageFromError } from '@/presentation/helpers/discord-errors';
 import { PlayerModel } from '@/domain/models/player';
+import { makeRemoteSaveMusicFactory } from './factories/usecases/remote/remote-save-music-factory';
+import { makeRemoteSaveQueueFactory } from './factories/usecases/remote/remote-save-queue-factory';
+import { Queue } from '@/domain/models/queue';
+import { playerButtons, getErrorMessageFromError } from '@/presentation/helpers';
 
 const client = new Client({
   intents: [
@@ -64,27 +67,25 @@ void (async () => {
   }, 5000);
 })();
 
-client.on('messageCreate', async message => {
-  // Message Validations
-  if (message.author.bot && message.author.username !== `${process.env.BOT_NAME} Web`) {
-    return;
-  }
-  if (!message.content.startsWith(settings?.prefix ?? '!')) return;
+const remoteSaveQueue = makeRemoteSaveQueueFactory();
 
-  // Send message to current channel
-  const sendMessage = makeDiscordSendMessageFactory(message.channel);
-
+const handleCommands = async (
+  message: Message | ButtonInteraction,
+  sendMessage?: DiscordSendMessage
+): Promise<void> => {
   if (message) {
-    const args = message.content.slice(settings?.prefix?.length).trim().split(/ +/g);
-    const command = args.shift();
+    const args =
+      message instanceof Message ? message.content.slice(settings?.prefix?.length).trim().split(/ +/g) : [];
+    const command = message instanceof Message ? args.shift() : message.customId.split(';')[0];
 
     console.info(`Command received: ${command}`);
+    console.info(`Arguments received: ${args}`);
 
     console.info(`Guild ID: ${message?.guild?.id}`);
     if (message?.guild?.id) {
       const guildQueue = client.player.getQueue(message?.guild?.id);
 
-      if (command === 'play' || command === 'playlist') {
+      if (message instanceof Message && (command === 'play' || command === 'playlist')) {
         const queue = client.player.createQueue(message.guild.id);
         if (message?.member?.voice?.channel) {
           await queue.join(message?.member?.voice?.channel);
@@ -108,7 +109,8 @@ client.on('messageCreate', async message => {
       }
 
       if (command === 'skip') {
-        guildQueue?.skip();
+        const skipIndex = Number(args);
+        guildQueue?.skip(Number.isInteger(skipIndex) ? skipIndex : undefined);
         return;
       }
 
@@ -158,6 +160,8 @@ client.on('messageCreate', async message => {
         const messageObj = {
           title: '🎵  Queue'
         };
+
+        await remoteSaveQueue.save({ songs: mapQueue(guildQueue?.songs) });
 
         const fields: any = [];
         guildQueue?.songs.forEach((song, i) => {
@@ -243,15 +247,35 @@ client.on('messageCreate', async message => {
       }
     }
 
-    const executeCommand = makeDiscordExecuteCommandFactory(client, message, settings);
-    try {
-      return await executeCommand.execute(command);
-    } catch (error) {
-      console.error(error);
-      const errorMessage = getErrorMessageFromError(error);
-      await sendMessage.send(errorMessage);
+    if (message instanceof Message) {
+      const executeCommand = makeDiscordExecuteCommandFactory(client, message, settings);
+      try {
+        return await executeCommand.execute(command);
+      } catch (error) {
+        console.error(error);
+        const errorMessage = getErrorMessageFromError(error);
+        await sendMessage.send(errorMessage);
+      }
     }
   }
+};
+
+client.on('messageCreate', async message => {
+  // Message Validations
+  if (message.author.bot && message.author.username !== `${process.env.BOT_NAME} Web`) {
+    return;
+  }
+  if (!message.content.startsWith(settings?.prefix ?? '!')) return;
+
+  // Send message to current channel
+  const sendMessage = makeDiscordSendMessageFactory(message.channel);
+
+  await handleCommands(message, sendMessage);
+});
+
+client.on('interactionCreate', async (message: ButtonInteraction) => {
+  await message.deferUpdate();
+  await handleCommands(message);
 });
 
 // New Member
@@ -262,6 +286,17 @@ client.on('guildMemberAdd', async member => {
   });
 });
 
+const remoteSaveMusic = makeRemoteSaveMusicFactory();
+
+const mapQueue = (songs: Song[]): Queue =>
+  songs.map(song => ({
+    name: song.name,
+    author: song.author,
+    duration: song.duration,
+    thumbnail: song.thumbnail,
+    url: song.url
+  })) as Queue;
+
 // Init the event listener only once (at the top of your code).
 client.player
   // Emitted when channel was empty.
@@ -270,6 +305,7 @@ client.player
     await sendMusicMessage?.send({
       title: '🎵  Everyone left the Voice Channel, queue ended.'
     });
+    await remoteSaveMusic.save({ name: null, duration: null });
   })
   // Emitted when a song was added to the queue.
   .on('songAdd', async (queue, song) => {
@@ -281,6 +317,7 @@ client.player
         value: song.name
       }
     });
+    await remoteSaveQueue.save({ songs: mapQueue(queue.songs) });
   })
   // Emitted when a playlist was added to the queue.
   .on('playlistAdd', async (queue, playlist) => {
@@ -289,6 +326,7 @@ client.player
       title: '🎵  Playlist Added!',
       description: `Playlist ${playlist.name} with ${playlist?.songs?.length} songs was added to the queue.`
     });
+    await remoteSaveQueue.save({ songs: mapQueue(queue.songs) });
   })
   // Emitted when there was no more music to play.
   .on('queueDestroyed', async queue => {
@@ -296,6 +334,7 @@ client.player
     await sendMusicMessage?.send({
       title: '🎵  Queue was destroyed.'
     });
+    await remoteSaveQueue.save({ songs: [] });
   })
   // Emitted when the queue was destroyed (either by ending or stopping).
   .on('queueEnd', async queue => {
@@ -303,28 +342,35 @@ client.player
     await sendMusicMessage?.send({
       title: '🎵  The queue has ended.'
     });
+    await remoteSaveMusic.save({ name: null, duration: null });
+    await remoteSaveQueue.save({ songs: [] });
   })
   // Emitted when a song changed.
   .on('songChanged', async (queue, newSong, oldSong) => {
-    console.info(`${newSong} is now playing. -> ${queue}`);
+    console.info(`${newSong} is now playing`);
     await sendMusicMessage?.send({
       title: '🎵  Now Playing',
       fields: {
         name: 'Song',
         value: newSong.name
-      }
+      },
+      buttons: playerButtons
     });
+    await remoteSaveMusic.save({ name: newSong.name, duration: newSong.duration });
+    await remoteSaveQueue.save({ songs: mapQueue(queue.songs) });
   })
   // Emitted when a first song in the queue started playing.
   .on('songFirst', async (queue, song) => {
-    console.info(`Started Playing ${song}. -> ${JSON.stringify(queue)}`);
+    console.info(`Started Playing ${song}`);
     await sendMusicMessage?.send({
       title: '🎵  Started Playing',
       fields: {
         name: 'Song',
         value: song.name
-      }
+      },
+      buttons: playerButtons
     });
+    await remoteSaveMusic.save({ name: song.name, duration: song.duration });
   })
   // Emitted when someone disconnected the bot from the channel.
   .on('clientDisconnect', async queue => {
@@ -332,6 +378,8 @@ client.player
     await sendMusicMessage?.send({
       title: '😞  I was kicked from the Voice Channel, queue ended.'
     });
+    await remoteSaveMusic.save({ name: null, duration: null });
+    await remoteSaveQueue.save({ songs: [] });
   })
   // Emitted when deafenOnJoin is true and the bot was undeafened
   .on('clientUndeafen', async queue => {

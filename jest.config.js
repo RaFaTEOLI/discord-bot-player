@@ -10,7 +10,8 @@ module.exports = {
   collectCoverageFrom: [
     '<rootDir>/src/**/*.ts',
     '!<rootDir>/src/main/**',
-    '!**/test/**',
+    '!<rootDir>/src/presentation/helpers/index.ts',
+    '!**/test/**'
   ],
   // The directory where Jest should output its coverage files
   coverageDirectory: 'coverage',
@@ -21,10 +22,10 @@ module.exports = {
   roots: ['<rootDir>/src'],
   // A map from regular expressions to paths to transformers
   transform: {
-    '.+\\.ts$': 'ts-jest',
+    '.+\\.ts$': 'ts-jest'
   },
   moduleNameMapper: {
-    '@/(.*)': '<rootDir>/src/$1',
+    '@/(.*)': '<rootDir>/src/$1'
   },
-  setupFiles: ['<rootDir>/.jest/setEnvVars.js'],
+  setupFiles: ['<rootDir>/.jest/setEnvVars.js']
 };
