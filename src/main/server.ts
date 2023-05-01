@@ -289,13 +289,15 @@ client.on('guildMemberAdd', async member => {
 const remoteSaveMusic = makeRemoteSaveMusicFactory();
 
 const mapQueue = (songs: Song[]): Queue =>
-  songs.map(song => ({
-    name: song.name,
-    author: song.author,
-    duration: song.duration,
-    thumbnail: song.thumbnail,
-    url: song.url
-  })) as Queue;
+  songs
+    .map(song => ({
+      name: song.name,
+      author: song.author,
+      duration: song.duration,
+      thumbnail: song.thumbnail,
+      url: song.url
+    }))
+    .slice(0, 30) as Queue;
 
 // Init the event listener only once (at the top of your code).
 client.player
