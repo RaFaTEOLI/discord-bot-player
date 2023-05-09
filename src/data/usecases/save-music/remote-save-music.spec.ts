@@ -75,12 +75,24 @@ describe('RemoteSaveMusic', () => {
     expect(response).toBeFalsy();
   });
 
-  test('should call AmqpClientSpy with correct queue and data when useApiQueue is true', async () => {
+  test('should call AmqpClient with correct queue and data when useApiQueue is true', async () => {
     const url = faker.internet.url();
     const { sut, amqpClientSpy } = makeSut(url, true);
     const sendSpy = jest.spyOn(amqpClientSpy, 'send');
     const body = mockMusicModel();
     await sut.save(body);
     expect(sendSpy).toHaveBeenCalledWith('music', body);
+  });
+
+  test('should call console.error when AmqpClient fails', async () => {
+    const url = faker.internet.url();
+    const { sut, amqpClientSpy } = makeSut(url, true);
+    jest.spyOn(amqpClientSpy, 'send').mockRejectedValue(new Error());
+    const errorLogSpy = jest.spyOn(console, 'error');
+    const body = mockMusicModel();
+    await sut.save(body);
+    expect(errorLogSpy).toHaveBeenCalledWith(
+      `Error sending music payload to API Queue: ${JSON.stringify(body)} with error: ${new Error().message}`
+    );
   });
 });
