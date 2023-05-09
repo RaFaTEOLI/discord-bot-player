@@ -1,8 +1,8 @@
 import { RemoteSaveMusic } from '@/data/usecases/save-music/remote-save-music';
-import { makeApiUrl, useApiQueueFactory } from '@/main/factories/http';
+import { makeApiUrl } from '@/main/factories/http';
 import { makeAuthorizeHttpClientDecorator } from '@/main/factories/decorators';
 import { SaveMusic } from '@/domain/usecases/save-music';
-import { makeAmqpClient } from '@/main/factories/queue/amqp-client-factory';
+import { makeAmqpClient, useApiQueueFactory } from '@/main/factories/queue';
 
 export const makeRemoteSaveMusicFactory = (): SaveMusic => {
   return new RemoteSaveMusic(
