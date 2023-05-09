@@ -1,4 +1,4 @@
-import { HttpClientSpy } from '@/data/test';
+import { AmqpClientSpy, HttpClientSpy } from '@/data/test';
 import { RemoteSaveMusic } from './remote-save-music';
 import { HttpStatusCode } from '@/data/protocols/http';
 import { AccessDeniedError, UnexpectedError } from '@/domain/errors';
@@ -8,15 +8,18 @@ import { mockMusicModel } from '@/domain/test/mock-music';
 type SutTypes = {
   sut: RemoteSaveMusic;
   httpClientSpy: HttpClientSpy;
+  amqpClientSpy: AmqpClientSpy;
 };
 
-const makeSut = (url = faker.internet.url()): SutTypes => {
+const makeSut = (url = faker.internet.url(), useApiQueue = false): SutTypes => {
   const httpClientSpy = new HttpClientSpy();
-  const sut = new RemoteSaveMusic(url, httpClientSpy);
+  const amqpClientSpy = new AmqpClientSpy();
+  const sut = new RemoteSaveMusic(url, httpClientSpy, amqpClientSpy, useApiQueue);
 
   return {
     sut,
-    httpClientSpy
+    httpClientSpy,
+    amqpClientSpy
   };
 };
 
@@ -70,5 +73,14 @@ describe('RemoteSaveMusic', () => {
     };
     const response = await sut.save(mockMusicModel());
     expect(response).toBeFalsy();
+  });
+
+  test('should call AmqpClientSpy with correct queue and data when useApiQueue is true', async () => {
+    const url = faker.internet.url();
+    const { sut, amqpClientSpy } = makeSut(url, true);
+    const sendSpy = jest.spyOn(amqpClientSpy, 'send');
+    const body = mockMusicModel();
+    await sut.save(body);
+    expect(sendSpy).toHaveBeenCalledWith('music', body);
   });
 });
