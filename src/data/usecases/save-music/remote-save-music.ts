@@ -14,8 +14,15 @@ export class RemoteSaveMusic implements SaveMusic {
 
   async save(data: SaveMusicParams): Promise<void> {
     if (this.useApiQueue) {
-      await this.amqpClient.send('music', data);
-      return;
+      try {
+        await this.amqpClient.send('music', data);
+        return;
+      } catch (err) {
+        console.error(
+          `Error sending music payload to API Queue: ${JSON.stringify(data)} with error: ${err.message}`
+        );
+        return;
+      }
     }
     const httpResponse = await this.httpGetClient.request({
       url: this.url,
