@@ -1,6 +1,4 @@
 import { mockMusicModel } from '@/domain/test/mock-music';
-import { SaveMusicParams } from '@/domain/usecases/save-music';
-import { SaveQueueParams } from '@/domain/usecases/save-queue';
 import { AmqpClient } from '@/infra/queue/amqp-client';
 
 const mockSendToQueue = jest.fn();
@@ -18,7 +16,7 @@ jest.mock('amqplib', () => {
 });
 
 type SutTypes = {
-  sut: AmqpClient<SaveMusicParams | SaveQueueParams>;
+  sut: AmqpClient;
 };
 
 const makeSut = async (): Promise<SutTypes> => {
