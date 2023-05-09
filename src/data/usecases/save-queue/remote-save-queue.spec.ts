@@ -83,4 +83,16 @@ describe('RemoteSaveQueue', () => {
     await sut.save(body);
     expect(sendSpy).toHaveBeenCalledWith('queue', body);
   });
+
+  test('should call console.error when AmqpClient fails', async () => {
+    const url = faker.internet.url();
+    const { sut, amqpClientSpy } = makeSut(url, true);
+    jest.spyOn(amqpClientSpy, 'send').mockRejectedValue(new Error());
+    const errorLogSpy = jest.spyOn(console, 'error');
+    const body = mockQueueModel();
+    await sut.save(body);
+    expect(errorLogSpy).toHaveBeenCalledWith(
+      `Error sending music queue payload to API Queue: ${JSON.stringify(body)} with error: ${new Error().message}`
+    );
+  });
 });
