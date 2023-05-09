@@ -19,6 +19,7 @@
   },
   "dependencies": {
     "@discordjs/opus": "^0.8.0",
+    "amqplib": "^0.10.3",
     "discord-music-player": "^9.1.1",
     "discord.js": "^14.9.0",
     "dotenv": "^16.0.3",
@@ -27,6 +28,7 @@
   },
   "devDependencies": {
     "@faker-js/faker": "^7.6.0",
+    "@types/amqplib": "^0.10.1",
     "@types/jest": "^29.1.2",
     "@types/node": "^18.8.3",
     "@typescript-eslint/eslint-plugin": "^5.39.0",
