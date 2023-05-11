@@ -5,3 +5,4 @@ export * from './mock-http';
 export * from './mock-button-builder';
 export * from './mock-action-row-builder';
 export * from './discord';
+export * from './mock-amqp';
