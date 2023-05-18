@@ -243,6 +243,15 @@ const handleCommands = async (
         return;
       }
 
+      if (command === 'togglePlay') {
+        if (guildQueue?.isPlaying) {
+          guildQueue?.setPaused(true);
+        } else {
+          guildQueue?.setPaused(false);
+        }
+        return;
+      }
+
       if (command === 'remove') {
         guildQueue?.remove(parseInt(args[0]));
         return;
