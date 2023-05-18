@@ -11,9 +11,7 @@ type SutTypes = {
   discordQueue: Queue;
 };
 
-const makeSut = (): SutTypes => {
-  const discordQueue = mockDiscordQueue();
-  const discordMessage = mockDiscordMessage();
+const makeSut = (discordQueue = mockDiscordQueue(), discordMessage = mockDiscordMessage()): SutTypes => {
   const sut = new DiscordPlayMusic(discordQueue, discordMessage);
 
   return { sut, discordMessage, discordQueue };
@@ -69,5 +67,19 @@ describe('DiscordPlayMusic', () => {
     expect(playlist).toBeTruthy();
     expect(playlist.url).toBe(url);
     expect(playlist.songs.length).toBe(2);
+  });
+
+  test('should call queue.join with a default voice channel when no voice channel is provided', async () => {
+    const discordMessageWithoutVoiceChannel = mockDiscordMessage();
+    delete discordMessageWithoutVoiceChannel.member.voice.channel;
+
+    const { sut, discordQueue } = makeSut(mockDiscordQueue(), discordMessageWithoutVoiceChannel);
+    const joinSpy = jest.spyOn(discordQueue, 'join');
+    const arrayFromSpy = jest.spyOn(Array, 'from');
+    arrayFromSpy.mockImplementationOnce(() => [1]);
+
+    const url = faker.internet.url();
+    await sut.play(url);
+    expect(joinSpy).toHaveBeenCalledWith(discordMessageWithoutVoiceChannel.guild.channels.cache[0].id);
   });
 });
