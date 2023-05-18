@@ -89,6 +89,21 @@ const handleCommands = async (
         const queue = client.player.createQueue(message.guild.id);
         if (message?.member?.voice?.channel) {
           await queue.join(message?.member?.voice?.channel);
+        } else {
+          // Auto assign a channel for the bot to join
+          const voiceChannels = message.guild.channels.cache
+            .filter(channel => channel.type === 2 && Array.from(channel.members).length > 0)
+            .map(channel => channel.id);
+
+          if (voiceChannels.length) {
+            await queue.join(voiceChannels[0]);
+          } else {
+            console.error('There are no voice channel with members to play');
+            await sendMusicMessage.send({
+              title: '🔇 No Voice Channel',
+              description: 'There are no voice channel with members to play'
+            });
+          }
         }
 
         if (command === 'play') {
