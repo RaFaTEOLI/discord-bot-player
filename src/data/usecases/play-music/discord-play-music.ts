@@ -1,7 +1,7 @@
 import { Message } from 'discord.js';
 import 'dotenv/config';
 import { PlayMusic } from '@/domain/usecases/play-music';
-import { Playlist, Queue, Song } from 'discord-music-player';
+import { Playlist, Queue, Song } from '@rafateoli/discord-music-player';
 
 export class DiscordPlayMusic implements PlayMusic {
   constructor(private readonly discordQueue: Queue, private readonly message: Message) {}

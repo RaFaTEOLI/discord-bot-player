@@ -1,5 +1,5 @@
 import { DiscordClient } from '@/domain/models/discord-client';
-import { Player, Queue } from 'discord-music-player';
+import { Player, Queue } from '@rafateoli/discord-music-player';
 import { mockDiscordQueue } from './mock-discord-queue';
 
 export const mockDiscordClient = (): DiscordClient => {

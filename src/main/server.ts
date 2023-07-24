@@ -1,6 +1,6 @@
 import 'module-alias/register';
 import { ActivityType, ButtonInteraction, Client, GatewayIntentBits, Message } from 'discord.js';
-import { Player, RepeatMode, Song } from 'discord-music-player';
+import { Player, RepeatMode, Song } from '@rafateoli/discord-music-player';
 import 'dotenv/config';
 import { DiscordSendMessage } from '@/data/usecases/send-message/discord-send-message';
 import { makeDiscordSendMessageFactory } from './factories/usecases/discord/discord-send-message-factory';
@@ -315,11 +315,11 @@ const remoteSaveMusic = makeRemoteSaveMusicFactory();
 const mapQueue = (songs: Song[]): Queue =>
   songs
     .map(song => ({
-      name: song.name,
-      author: song.author,
-      duration: song.duration,
-      thumbnail: song.thumbnail,
-      url: song.url
+      name: song?.name,
+      author: song?.author,
+      duration: song?.duration,
+      thumbnail: song?.thumbnail,
+      url: song?.url
     }))
     .slice(0, 30) as Queue;
 

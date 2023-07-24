@@ -1,6 +1,6 @@
 import { Message } from 'discord.js';
 import 'dotenv/config';
-import { Queue } from 'discord-music-player';
+import { Queue } from '@rafateoli/discord-music-player';
 import { DiscordClient } from '@/domain/models/discord-client';
 import { CreateQueue } from '@/domain/usecases/create-queue';
 

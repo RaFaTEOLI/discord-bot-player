@@ -3,7 +3,7 @@ import { faker } from '@faker-js/faker';
 import { DiscordPlayMusic } from './discord-play-music';
 import { mockDiscordMessage, mockDiscordQueue } from '@/data/test';
 import { Message } from 'discord.js';
-import { Playlist, Queue } from 'discord-music-player';
+import { Playlist, Queue } from '@rafateoli/discord-music-player';
 
 type SutTypes = {
   sut: DiscordPlayMusic;

@@ -1,6 +1,6 @@
 import { DiscordClient } from '@/domain/models/discord-client';
 import { PlayMusic } from '@/domain/usecases/play-music';
-import { Song } from 'discord-music-player';
+import { Song } from '@rafateoli/discord-music-player';
 import { Message } from 'discord.js';
 import { mockDiscordClient } from './mock-discord-client';
 import { mockDiscordMessage } from './mock-discord-message';

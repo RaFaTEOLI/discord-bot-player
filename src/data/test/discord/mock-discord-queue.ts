@@ -9,7 +9,7 @@ import {
   RepeatMode,
   Song,
   StreamConnection
-} from 'discord-music-player';
+} from '@rafateoli/discord-music-player';
 import { Guild } from 'discord.js';
 
 export const mockDiscordQueue = (): Queue => {

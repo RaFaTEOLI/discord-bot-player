@@ -1,6 +1,6 @@
 /* eslint-disable @typescript-eslint/consistent-type-assertions */
 import { faker } from '@faker-js/faker';
-import { Playlist } from 'discord-music-player';
+import { Playlist } from '@rafateoli/discord-music-player';
 import { mockDiscordSongModel } from './mock-discord-song';
 
 export const mockDiscordPlaylistModel = (url = faker.internet.url()): Playlist =>
