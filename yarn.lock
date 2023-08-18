@@ -268,11 +268,11 @@
     "@babel/helper-plugin-utils" "^7.18.6"
 
 "@babel/runtime@^7.15.4":
-  version "7.22.6"
-  resolved "https://registry.yarnpkg.com/@babel/runtime/-/runtime-7.22.6.tgz#57d64b9ae3cff1d67eb067ae117dac087f5bd438"
-  integrity sha512-wDb5pWm4WDdF6LFUde3Jl8WzPA+3ZbxYqkC6xAXuD3irdEHN1k0NfTRrJD8ZD378SJ61miMLCqIOXYhd8x+AJQ==
+  version "7.22.10"
+  resolved "https://registry.yarnpkg.com/@babel/runtime/-/runtime-7.22.10.tgz#ae3e9631fd947cb7e3610d3e9d8fef5f76696682"
+  integrity sha512-21t/fkKLMZI4pqP2wlmsQAWnYW1PDyKyyUV4vCi+B25ydmdaYTKXPwCj0BzSUnZf4seIiYvSA3jcZ3gdsMFkLQ==
   dependencies:
-    regenerator-runtime "^0.13.11"
+    regenerator-runtime "^0.14.0"
 
 "@babel/template@^7.18.10", "@babel/template@^7.3.3":
   version "7.18.10"
@@ -730,10 +730,10 @@
     "@nodelib/fs.scandir" "2.1.5"
     fastq "^1.6.0"
 
-"@rafateoli/discord-music-player@^9.2.0":
-  version "9.2.0"
-  resolved "https://registry.yarnpkg.com/@rafateoli/discord-music-player/-/discord-music-player-9.2.0.tgz#272c54959b0ea88ff586a985b2cbaeed19d0fd01"
-  integrity sha512-Y1A45y1itQ9hKOY6hXcuCMI50rOenCbU9aTPByf4dc6Kpw4kORJhNYKWOC3NX1dbYbcwrd/7f8zTvQUglEKSGA==
+"@rafateoli/discord-music-player@^9.2.1":
+  version "9.2.1"
+  resolved "https://registry.yarnpkg.com/@rafateoli/discord-music-player/-/discord-music-player-9.2.1.tgz#67f4e05dc78cff4ec8a567a0cf9b839b40d9b1f0"
+  integrity sha512-bmBUkqhaatsIpAhJpfJ518rDTxJI1eKtPpK/GxB4kxRctlGnbUgMO4q7+IG7a7w4TjNpfuZFmawHNbg+4QlRJw==
   dependencies:
     "@discordjs/opus" "^0.8.0"
     "@discordjs/voice" "^0.11.0"
@@ -749,7 +749,7 @@
     spotify-url-info "^3.1.7"
     youtubei "^0.0.1-rc.34"
     ytdl-core "^4.11.4"
-    ytsr "^3.8.2"
+    ytsr "^3.8.4"
 
 "@sapphire/async-queue@^1.5.0":
   version "1.5.0"
@@ -898,9 +898,9 @@
   integrity sha512-dRLjCWHYg4oaA77cxO64oO+7JwCwnIzkZPdrrC71jQmQtlhM556pwKo5bUzqvZndkVbeFLIIi+9TC40JNF5hNQ==
 
 "@types/node@*":
-  version "18.11.10"
-  resolved "https://registry.yarnpkg.com/@types/node/-/node-18.11.10.tgz#4c64759f3c2343b7e6c4b9caf761c7a3a05cee34"
-  integrity sha512-juG3RWMBOqcOuXC643OAdSA525V44cVgGV6dUDuiFtss+8Fk5x1hI93Rsld43VeJVIeqlP9I7Fn9/qaVqoEAuQ==
+  version "20.5.1"
+  resolved "https://registry.yarnpkg.com/@types/node/-/node-20.5.1.tgz#178d58ee7e4834152b0e8b4d30cbfab578b9bb30"
+  integrity sha512-4tT2UrL5LBqDwoed9wZ6N3umC4Yhz3W3FloMmiiG4JwmUJWpie0c7lcnUNd4gtMKuDEO4wRVS8B6Xa0uMRsMKg==
 
 "@types/node@^10.0.3":
   version "10.17.60"
@@ -1214,9 +1214,9 @@ astral-regex@^2.0.0:
   integrity sha512-Z7tMw1ytTXt5jqMcOP+OQteU1VuNK9Y02uuJtKQ1Sv69jXQKKg5cibLwGJow8yzZP+eAc18EmLGPal0bp36rvQ==
 
 axios-retry@^3.2.0:
-  version "3.5.1"
-  resolved "https://registry.yarnpkg.com/axios-retry/-/axios-retry-3.5.1.tgz#d902f69fe1b2a71902e29605318f887bef0981c6"
-  integrity sha512-mQRJ4IyAUnYig14BQ4MnnNHHuH1cNH7NW4JxEUD6mNJwK6pwOY66wKLCwZ6Y0o3POpfStalqRC+J4+Hnn6Om7w==
+  version "3.6.0"
+  resolved "https://registry.yarnpkg.com/axios-retry/-/axios-retry-3.6.0.tgz#3bf6edbce42e526a3f7ac70b1891b645adb4c301"
+  integrity sha512-jtH4qWTKZ2a17dH6tjq52Y1ssNV0lKge6/Z9Lw67s9Wt01nGTg4hg7/LJBGYfDci44NTANJQlCPHPOT/TSFm9w==
   dependencies:
     "@babel/runtime" "^7.15.4"
     is-retry-allowed "^2.2.0"
@@ -2244,9 +2244,9 @@ fb-watchman@^2.0.0:
     bser "2.1.1"
 
 ffmpeg-static@^5.0.2:
-  version "5.1.0"
-  resolved "https://registry.yarnpkg.com/ffmpeg-static/-/ffmpeg-static-5.1.0.tgz#133500f4566570c5a0e96795152b0526d8c936ad"
-  integrity sha512-eEWOiGdbf7HKPeJI5PoJ0oCwkL0hckL2JdS4JOuB/gUETppwkEpq8nF0+e6VEQnDCo/iuoipbTUsn9QJmtpNkg==
+  version "5.2.0"
+  resolved "https://registry.yarnpkg.com/ffmpeg-static/-/ffmpeg-static-5.2.0.tgz#6ca64a5ed6e69ec4896d175c1f69dd575db7c5ef"
+  integrity sha512-WrM7kLW+do9HLr+H6tk7LzQ7kPqbAgLjdzNE32+u3Ff11gXt9Kkkd2nusGFrlWMIe+XaA97t+I8JS7sZIrvRgA==
   dependencies:
     "@derhuerst/http-basic" "^8.2.0"
     env-paths "^2.2.0"
@@ -3907,10 +3907,10 @@ readdirp@~3.6.0:
   dependencies:
     picomatch "^2.2.1"
 
-regenerator-runtime@^0.13.11:
-  version "0.13.11"
-  resolved "https://registry.yarnpkg.com/regenerator-runtime/-/regenerator-runtime-0.13.11.tgz#f6dca3e7ceec20590d07ada785636a90cdca17f9"
-  integrity sha512-kY1AZVr2Ra+t+piVaJ4gxaFaReZVH40AKNo7UCX6W+dEwBo/2oZJzqfuN1qLq1oL45o56cPaTXELwrTh8Fpggg==
+regenerator-runtime@^0.14.0:
+  version "0.14.0"
+  resolved "https://registry.yarnpkg.com/regenerator-runtime/-/regenerator-runtime-0.14.0.tgz#5e19d68eb12d486f797e15a3c6a918f7cec5eb45"
+  integrity sha512-srw17NI0TUWHuGa5CFGGmhfNIeja30WMBfbslPNhf6JrqQlLN5gcrvig1oqPxiVaXb0oW0XRKtH6Nngs5lKCIA==
 
 regexp.prototype.flags@^1.4.3:
   version "1.4.3"
@@ -4154,18 +4154,18 @@ source-map@^0.6.0, source-map@^0.6.1:
   resolved "https://registry.yarnpkg.com/source-map/-/source-map-0.6.1.tgz#74722af32e9614e9c287a8d0bbde48b5e2f1a263"
   integrity sha512-UjgapumWlbMhkBgzT7Ykc5YXUT46F0iKu8SGXq0bcwP5dz/h0Plj6enJqjz1Zbq2l5WaqYnrVbwWOWMyF3F47g==
 
-spotify-uri@~3.0.3:
-  version "3.0.4"
-  resolved "https://registry.yarnpkg.com/spotify-uri/-/spotify-uri-3.0.4.tgz#3925951f03043bbb344219b471e37bc911ae726d"
-  integrity sha512-wtofZNzMjPXR1KD2/gw8F/7ng1QwxpfFbrVgcRaAh0oSJ6ZGC5ln+IBptIRuti1dYGOxJqEIvDc88ctLvTSWiQ==
+spotify-uri@~4.0.0:
+  version "4.0.0"
+  resolved "https://registry.yarnpkg.com/spotify-uri/-/spotify-uri-4.0.0.tgz#a56d034146726d4f43630151a497efbf4c4230db"
+  integrity sha512-ZAJKcnfx73glWG+3SCDRvW4nkVMzA2hqZwJtSDZ/o87EoGawh/CZ8YkqZIoVcLkg94suicEa/ZOiBFSz1MJ6Pg==
 
 spotify-url-info@^3.1.7:
-  version "3.2.5"
-  resolved "https://registry.yarnpkg.com/spotify-url-info/-/spotify-url-info-3.2.5.tgz#96396702aca6a937d614197fb2bc6f4e2a54821d"
-  integrity sha512-5LpA8PznECfTPRVcgYSyYOn7dr3aq+sHgl3JrDDKT7NVJ8exEhFD1NsmR8/kObc6qlr0H6t+AZDVVfv3HiEKaQ==
+  version "3.2.6"
+  resolved "https://registry.yarnpkg.com/spotify-url-info/-/spotify-url-info-3.2.6.tgz#e7838372368488897ade3d4e2f4cab6ead0971b8"
+  integrity sha512-AOGU4uyT0FqyEXbyvZc+ZShnTGBY1eMd50BBZBPfiXPT4ihuzmxAmkWj9VzHT9NIjX7MtVDrszATllR8+WeFkw==
   dependencies:
     himalaya "~1.1.0"
-    spotify-uri "~3.0.3"
+    spotify-uri "~4.0.0"
 
 sprintf-js@~1.0.2:
   version "1.0.3"
@@ -4497,9 +4497,9 @@ tslib@^2.1.0:
   integrity sha512-d6xOpEDfsi2CZVlPQzGeux8XMwLT9hssAsaPYExaQMuYskwb+x1x7J371tWlbBdWHroy99KnVB6qIkUbs5X3UQ==
 
 tslib@^2.4.0:
-  version "2.6.1"
-  resolved "https://registry.yarnpkg.com/tslib/-/tslib-2.6.1.tgz#fd8c9a0ff42590b25703c0acb3de3d3f4ede0410"
-  integrity sha512-t0hLfiEKfMUoqhG+U1oid7Pva4bbDPHYfJNiB7BiIjRkj1pyC++4N3huJfqY6aRH6VTB0rvtzQwjM4K6qpfOig==
+  version "2.6.2"
+  resolved "https://registry.yarnpkg.com/tslib/-/tslib-2.6.2.tgz#703ac29425e7b37cd6fd456e92404d46d1f3e4ae"
+  integrity sha512-AEYxH93jGFPn/a2iVAwW87VuUIkR1FVUKB77NwMF7nBTDkDrrT/Hpt/IrCJ0QXhW27jTBDcf5ZY7w6RiqTMw2Q==
 
 tslib@^2.5.0:
   version "2.5.0"
@@ -4767,9 +4767,9 @@ ytdl-core@^4.11.4:
     miniget "^4.2.2"
     sax "^1.1.3"
 
-ytsr@^3.8.2:
-  version "3.8.2"
-  resolved "https://registry.yarnpkg.com/ytsr/-/ytsr-3.8.2.tgz#10a60d0c1adcc3522b0810368c18dff49e875ba7"
-  integrity sha512-J+t+a1Ic6jL0Hd0zGX8eFn3uEKtXTf6naa96KO0q7H00GKBfCG8aXW55NAMnaBeUi9Hni6u1xKnf8xZF2F0E/A==
+ytsr@^3.8.4:
+  version "3.8.4"
+  resolved "https://registry.yarnpkg.com/ytsr/-/ytsr-3.8.4.tgz#f279eb5a50a72a1135816ea69220f76030f62358"
+  integrity sha512-rrJo59vDDf98mz/Cuw7Y2YiuTwSm3cs4XsXrP6yjYDXYup/aE0lRxY6XMKR3mGOHKwgLouZqFq8QRllVVVN88w==
   dependencies:
     miniget "^4.2.2"
