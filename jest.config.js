@@ -23,7 +23,7 @@ module.exports = {
   roots: ['<rootDir>/src'],
   // A map from regular expressions to paths to transformers
   transform: {
-    '.+\\.ts$': 'ts-jest'
+    '.+\\.ts$': ['@swc/jest']
   },
   moduleNameMapper: {
     '@/(.*)': '<rootDir>/src/$1'
