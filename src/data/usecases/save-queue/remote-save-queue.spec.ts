@@ -4,6 +4,7 @@ import { HttpStatusCode } from '@/data/protocols/http';
 import { AccessDeniedError, UnexpectedError } from '@/domain/errors';
 import { faker } from '@faker-js/faker';
 import { mockQueueModel } from '@/domain/test/mock-queue';
+import { describe, test, expect, vi } from 'vitest';
 
 type SutTypes = {
   sut: RemoteSaveQueue;
@@ -78,7 +79,7 @@ describe('RemoteSaveQueue', () => {
   test('should call AmqpClient with correct queue and data when useApiQueue is true', async () => {
     const url = faker.internet.url();
     const { sut, amqpClientSpy } = makeSut(url, true);
-    const sendSpy = jest.spyOn(amqpClientSpy, 'send');
+    const sendSpy = vi.spyOn(amqpClientSpy, 'send');
     const body = mockQueueModel();
     await sut.save(body);
     expect(sendSpy).toHaveBeenCalledWith('queue', body);
@@ -87,8 +88,8 @@ describe('RemoteSaveQueue', () => {
   test('should call console.error when AmqpClient fails', async () => {
     const url = faker.internet.url();
     const { sut, amqpClientSpy } = makeSut(url, true);
-    jest.spyOn(amqpClientSpy, 'send').mockRejectedValue(new Error());
-    const errorLogSpy = jest.spyOn(console, 'error');
+    vi.spyOn(amqpClientSpy, 'send').mockRejectedValue(new Error());
+    const errorLogSpy = vi.spyOn(console, 'error');
     const body = mockQueueModel();
     await sut.save(body);
     expect(errorLogSpy).toHaveBeenCalledWith(

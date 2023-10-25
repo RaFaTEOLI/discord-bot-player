@@ -2,6 +2,7 @@ import { DiscordSendMessage } from './discord-send-message';
 import { EmbedBuilder, ButtonBuilder, ActionRowBuilder, ButtonStyle } from 'discord.js';
 import { SendMessageChannel } from '@/data/protocols/discord/send-message-channel';
 import { mockActionRowBuilder, mockButtonBuilder, mockEmbedBuilder, mockSendMessageChannel } from '@/data/test';
+import { describe, test, expect, vi } from 'vitest';
 
 type SutTypes = {
   sut: DiscordSendMessage;
@@ -29,7 +30,7 @@ const makeSut = (): SutTypes => {
 describe('Discord Send Message', () => {
   test('should call send with correct values', async () => {
     const { sut, sendMessageChannelStub } = makeSut();
-    const sendSpy = jest.spyOn(sendMessageChannelStub, 'send');
+    const sendSpy = vi.spyOn(sendMessageChannelStub, 'send');
 
     await sut.send({
       title: 'any_title',
@@ -56,7 +57,7 @@ describe('Discord Send Message', () => {
 
   test('should call send with correct values and fields', async () => {
     const { sut, sendMessageChannelStub } = makeSut();
-    const sendSpy = jest.spyOn(sendMessageChannelStub, 'send');
+    const sendSpy = vi.spyOn(sendMessageChannelStub, 'send');
 
     await sut.send({
       title: 'any_title',
@@ -88,7 +89,7 @@ describe('Discord Send Message', () => {
 
   test('should call send with title only', async () => {
     const { sut, sendMessageChannelStub } = makeSut();
-    const sendSpy = jest.spyOn(sendMessageChannelStub, 'send');
+    const sendSpy = vi.spyOn(sendMessageChannelStub, 'send');
 
     await sut.send({
       title: 'any_title'
@@ -114,7 +115,7 @@ describe('Discord Send Message', () => {
 
   test('should throw exception if send throws exception', async () => {
     const { sut, sendMessageChannelStub } = makeSut();
-    jest.spyOn(sendMessageChannelStub, 'send').mockRejectedValueOnce(new Error());
+    vi.spyOn(sendMessageChannelStub, 'send').mockRejectedValueOnce(new Error());
 
     const promise = sut.send({
       title: 'any_title',
@@ -125,7 +126,7 @@ describe('Discord Send Message', () => {
 
   test('should call send with correct values and fields when calling twice', async () => {
     const { sut, sendMessageChannelStub } = makeSut();
-    const sendSpy = jest.spyOn(sendMessageChannelStub, 'send');
+    const sendSpy = vi.spyOn(sendMessageChannelStub, 'send');
 
     await sut.send({
       title: 'any_title',
@@ -165,7 +166,7 @@ describe('Discord Send Message', () => {
 
   test('should call send with correct values and array of fields', async () => {
     const { sut, sendMessageChannelStub } = makeSut();
-    const sendSpy = jest.spyOn(sendMessageChannelStub, 'send');
+    const sendSpy = vi.spyOn(sendMessageChannelStub, 'send');
 
     await sut.send({
       title: 'any_title',
@@ -212,7 +213,7 @@ describe('Discord Send Message', () => {
 
   test('should call send with correct values, with array of fields and components', async () => {
     const { sut, sendMessageChannelStub } = makeSut();
-    const sendSpy = jest.spyOn(sendMessageChannelStub, 'send');
+    const sendSpy = vi.spyOn(sendMessageChannelStub, 'send');
 
     await sut.send({
       title: 'any_title',
@@ -274,7 +275,7 @@ describe('Discord Send Message', () => {
 
   test('should call send with correct components', async () => {
     const { sut, sendMessageChannelStub } = makeSut();
-    const sendSpy = jest.spyOn(sendMessageChannelStub, 'send');
+    const sendSpy = vi.spyOn(sendMessageChannelStub, 'send');
 
     await sut.send({
       title: 'any_title',
@@ -325,7 +326,7 @@ describe('Discord Send Message', () => {
 
   test('should call send with correct components when calling twice', async () => {
     const { sut, sendMessageChannelStub } = makeSut();
-    const sendSpy = jest.spyOn(sendMessageChannelStub, 'send');
+    const sendSpy = vi.spyOn(sendMessageChannelStub, 'send');
 
     await sut.send({
       title: 'any_title',
@@ -384,7 +385,7 @@ describe('Discord Send Message', () => {
 
   test('should call send with correct components with emoji', async () => {
     const { sut, sendMessageChannelStub } = makeSut();
-    const sendSpy = jest.spyOn(sendMessageChannelStub, 'send');
+    const sendSpy = vi.spyOn(sendMessageChannelStub, 'send');
 
     await sut.send({
       title: 'any_title',

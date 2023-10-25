@@ -10,6 +10,7 @@ import { LoadCommands } from '@/domain/usecases/load-commands';
 import { CommandModel } from '@/domain/models/command';
 import { mockPlayerModel } from '@/domain/test/mock-player';
 import { PlayerModel } from '@/domain/models/player';
+import { describe, test, expect, vi } from 'vitest';
 
 type SutTypes = {
   sut: DiscordExecuteCommand;
@@ -50,7 +51,7 @@ const makeSut = (): SutTypes => {
 describe('DiscordExecuteCommand', () => {
   test('should call LoadCommand with correct values', async () => {
     const { sut, remoteLoadCommandStub } = makeSut();
-    const loadSpy = jest.spyOn(remoteLoadCommandStub, 'load');
+    const loadSpy = vi.spyOn(remoteLoadCommandStub, 'load');
 
     const id = faker.datatype.uuid();
     await sut.execute(id);
@@ -59,8 +60,8 @@ describe('DiscordExecuteCommand', () => {
 
   test('should send invalid command message if LoadCommand returns null', async () => {
     const { sut, remoteLoadCommandStub, discordSendMessageStub } = makeSut();
-    jest.spyOn(remoteLoadCommandStub, 'load').mockResolvedValueOnce(null);
-    const sendSpy = jest.spyOn(discordSendMessageStub, 'send');
+    vi.spyOn(remoteLoadCommandStub, 'load').mockResolvedValueOnce(null);
+    const sendSpy = vi.spyOn(discordSendMessageStub, 'send');
 
     await sut.execute(faker.datatype.uuid());
     expect(sendSpy).toHaveBeenCalledWith({
@@ -71,7 +72,7 @@ describe('DiscordExecuteCommand', () => {
 
   test('should send message if command type is message', async () => {
     const { sut, discordSendMessageStub } = makeSut();
-    const sendSpy = jest.spyOn(discordSendMessageStub, 'send');
+    const sendSpy = vi.spyOn(discordSendMessageStub, 'send');
 
     await sut.execute(faker.datatype.uuid());
     expect(sendSpy).toHaveBeenCalledWith({
@@ -81,10 +82,10 @@ describe('DiscordExecuteCommand', () => {
 
   test('should send invalid command type if command type is invalid', async () => {
     const { sut, remoteLoadCommandStub, discordSendMessageStub } = makeSut();
-    jest
-      .spyOn(remoteLoadCommandStub, 'load')
-      .mockResolvedValueOnce(Object.assign({}, mockCommand(), { type: 'invalid' }));
-    const sendSpy = jest.spyOn(discordSendMessageStub, 'send');
+    vi.spyOn(remoteLoadCommandStub, 'load').mockResolvedValueOnce(
+      Object.assign({}, mockCommand(), { type: 'invalid' })
+    );
+    const sendSpy = vi.spyOn(discordSendMessageStub, 'send');
 
     await sut.execute(faker.datatype.uuid());
     expect(sendSpy).toHaveBeenCalledWith({
@@ -96,10 +97,10 @@ describe('DiscordExecuteCommand', () => {
   test('should call DiscordPlayMusic with correct response if command type is music', async () => {
     const { sut, remoteLoadCommandStub, discordPlayMusicStub } = makeSut();
     const fakeCommand = mockCommand();
-    jest
-      .spyOn(remoteLoadCommandStub, 'load')
-      .mockResolvedValueOnce(Object.assign({}, fakeCommand, { type: 'music' }));
-    const playSpy = jest.spyOn(discordPlayMusicStub, 'play');
+    vi.spyOn(remoteLoadCommandStub, 'load').mockResolvedValueOnce(
+      Object.assign({}, fakeCommand, { type: 'music' })
+    );
+    const playSpy = vi.spyOn(discordPlayMusicStub, 'play');
 
     await sut.execute(fakeCommand.response);
     expect(playSpy).toHaveBeenCalledWith(fakeCommand.response, true);
@@ -107,7 +108,7 @@ describe('DiscordExecuteCommand', () => {
 
   test('should call LoadCommands if command is bot name', async () => {
     const { sut, remoteLoadCommandsStub } = makeSut();
-    const loadCommandsSpy = jest.spyOn(remoteLoadCommandsStub, 'load');
+    const loadCommandsSpy = vi.spyOn(remoteLoadCommandsStub, 'load');
 
     await sut.execute('test');
     expect(loadCommandsSpy).toHaveBeenCalled();
@@ -115,7 +116,7 @@ describe('DiscordExecuteCommand', () => {
 
   test('should send message with list of commands if command is bot name', async () => {
     const { sut, player, discordSendMessageStub } = makeSut();
-    const sendSpy = jest.spyOn(discordSendMessageStub, 'send');
+    const sendSpy = vi.spyOn(discordSendMessageStub, 'send');
 
     await sut.execute('test');
     expect(sendSpy).toHaveBeenCalledWith({
@@ -126,7 +127,7 @@ describe('DiscordExecuteCommand', () => {
 
   test('should send message with list of playlists if command is showPlaylists', async () => {
     const { sut, player, discordSendMessageStub, fakeCommands } = makeSut();
-    const sendSpy = jest.spyOn(discordSendMessageStub, 'send');
+    const sendSpy = vi.spyOn(discordSendMessageStub, 'send');
 
     await sut.execute('showPlaylists');
     expect(sendSpy).toHaveBeenCalledWith({
@@ -137,8 +138,8 @@ describe('DiscordExecuteCommand', () => {
 
   test('should send not found message if RemoteLoadCommands returns empty array', async () => {
     const { sut, discordSendMessageStub, remoteLoadCommandsStub } = makeSut();
-    jest.spyOn(remoteLoadCommandsStub, 'load').mockResolvedValueOnce([]);
-    const sendSpy = jest.spyOn(discordSendMessageStub, 'send');
+    vi.spyOn(remoteLoadCommandsStub, 'load').mockResolvedValueOnce([]);
+    const sendSpy = vi.spyOn(discordSendMessageStub, 'send');
 
     await sut.execute('showPlaylists');
     expect(sendSpy).toHaveBeenCalledWith({

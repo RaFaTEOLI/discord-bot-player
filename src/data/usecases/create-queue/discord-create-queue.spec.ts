@@ -2,6 +2,7 @@ import { DiscordCreateQueue } from './discord-create-queue';
 import { mockDiscordClient, mockDiscordMessage } from '@/data/test';
 import { DiscordClient } from '@/domain/models/discord-client';
 import { Message } from 'discord.js';
+import { describe, test, expect, vi } from 'vitest';
 
 type SutTypes = {
   sut: DiscordCreateQueue;
@@ -20,7 +21,7 @@ const makeSut = (): SutTypes => {
 describe('DiscordCreateQueue', () => {
   test('should call client.player.createQueue with message guild id', async () => {
     const { sut, discordMessage, discordClientStub } = makeSut();
-    const createQueueSpy = jest.spyOn(discordClientStub.player, 'createQueue');
+    const createQueueSpy = vi.spyOn(discordClientStub.player, 'createQueue');
 
     sut.createQueue();
     expect(createQueueSpy).toHaveBeenCalledWith(discordMessage.guild.id);

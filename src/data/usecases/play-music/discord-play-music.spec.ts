@@ -4,6 +4,7 @@ import { DiscordPlayMusic } from './discord-play-music';
 import { mockDiscordMessage, mockDiscordQueue } from '@/data/test';
 import { Message } from 'discord.js';
 import { Playlist, Queue } from '@rafateoli/discord-music-player';
+import { describe, test, expect, vi } from 'vitest';
 
 type SutTypes = {
   sut: DiscordPlayMusic;
@@ -20,7 +21,7 @@ const makeSut = (discordQueue = mockDiscordQueue(), discordMessage = mockDiscord
 describe('DiscordPlayMusic', () => {
   test('should call queue.join with voice channel', async () => {
     const { sut, discordMessage, discordQueue } = makeSut();
-    const joinSpy = jest.spyOn(discordQueue, 'join');
+    const joinSpy = vi.spyOn(discordQueue, 'join');
 
     const url = faker.internet.url();
     await sut.play(url);
@@ -29,7 +30,7 @@ describe('DiscordPlayMusic', () => {
 
   test('should call queue.play with correct url', async () => {
     const { sut, discordQueue } = makeSut();
-    const playSpy = jest.spyOn(discordQueue, 'play');
+    const playSpy = vi.spyOn(discordQueue, 'play');
 
     const url = faker.internet.url();
     await sut.play(url);
@@ -46,14 +47,14 @@ describe('DiscordPlayMusic', () => {
 
   test('should throw exception if queue throws exception', () => {
     const { sut, discordQueue } = makeSut();
-    jest.spyOn(discordQueue, 'join').mockRejectedValueOnce(new Error());
+    vi.spyOn(discordQueue, 'join').mockRejectedValueOnce(new Error());
     const promise = sut.play(faker.internet.url());
     expect(promise).rejects.toThrow();
   });
 
   test('should call queue.playlist with correct url if playlist param is true', async () => {
     const { sut, discordQueue } = makeSut();
-    const playlistSpy = jest.spyOn(discordQueue, 'playlist');
+    const playlistSpy = vi.spyOn(discordQueue, 'playlist');
 
     const url = faker.internet.url();
     await sut.play(url, true);
@@ -74,12 +75,24 @@ describe('DiscordPlayMusic', () => {
     delete discordMessageWithoutVoiceChannel.member.voice.channel;
 
     const { sut, discordQueue } = makeSut(mockDiscordQueue(), discordMessageWithoutVoiceChannel);
-    const joinSpy = jest.spyOn(discordQueue, 'join');
-    const arrayFromSpy = jest.spyOn(Array, 'from');
+    const joinSpy = vi.spyOn(discordQueue, 'join');
+    const arrayFromSpy = vi.spyOn(Array, 'from');
     arrayFromSpy.mockImplementationOnce(() => [1]);
 
     const url = faker.internet.url();
     await sut.play(url);
     expect(joinSpy).toHaveBeenCalledWith(discordMessageWithoutVoiceChannel.guild.channels.cache[0].id);
+  });
+
+  test('should not call queue.join with a default voice channel when no voice channel is found', async () => {
+    const discordMessageWithoutVoiceChannel = mockDiscordMessage();
+    delete discordMessageWithoutVoiceChannel.member.voice.channel;
+    discordMessageWithoutVoiceChannel.guild.channels.cache = [];
+
+    const { sut, discordQueue } = makeSut(mockDiscordQueue(), discordMessageWithoutVoiceChannel);
+    const joinSpy = vi.spyOn(discordQueue, 'join');
+
+    await sut.play(faker.internet.url());
+    expect(joinSpy).not.toHaveBeenCalled();
   });
 });

@@ -1,4 +1,5 @@
 import { getErrorMessageFromError } from './discord-errors';
+import { describe, test, expect } from 'vitest';
 
 describe('DiscordErrors', () => {
   const errorTitle = '⛔  Error.';

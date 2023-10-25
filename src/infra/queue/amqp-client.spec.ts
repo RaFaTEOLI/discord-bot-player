@@ -1,12 +1,14 @@
 import { mockMusicModel } from '@/domain/test/mock-music';
 import { AmqpClient } from '@/infra/queue/amqp-client';
+import { describe, test, expect, vi } from 'vitest';
 
-const mockSendToQueue = jest.fn();
+const mockSendToQueue = vi.fn();
 
-jest.mock('amqplib', () => {
+vi.mock('amqplib', async () => {
+  const actual = await vi.importActual('amqplib');
   return {
-    __esModule: true,
-    connect: jest.fn().mockImplementation(
+    ...(actual as any),
+    connect: vi.fn().mockImplementation(
       async () =>
         await Promise.resolve({
           createChannel: async () => ({ sendToQueue: mockSendToQueue })

@@ -1,5 +1,6 @@
 import { ButtonStyle } from 'discord.js';
 import { playerButtons } from './player-buttons';
+import { describe, test, expect } from 'vitest';
 
 describe('PlayerButtons', () => {
   test('should have stop emoji on Shuffle action', () => {
