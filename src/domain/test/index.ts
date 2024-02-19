@@ -7,3 +7,4 @@ export * from './mock-bot';
 export * from './mock-discord-chat-input-interaction';
 export * from './mock-discord-api-message';
 export * from './mock-discord-client';
+export * from './mock-discord-button-interaction';

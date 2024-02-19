@@ -19,5 +19,9 @@ export const getCommand = (
     command = message.commandName;
   }
 
+  if (message instanceof ButtonInteraction) {
+    command = message.customId.split(';')[0];
+  }
+
   return { command, args: args.join(' ') };
 };
