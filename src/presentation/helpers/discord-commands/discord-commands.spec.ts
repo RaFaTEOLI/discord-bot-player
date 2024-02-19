@@ -1,7 +1,8 @@
 import { describe, expect, test } from 'vitest';
 import { getCommand } from './discord-commands';
-import { mockDiscordChatInputInteraction, mockDiscordMessage } from '@/domain/test';
+import { mockDiscordButtonInteraction, mockDiscordChatInputInteraction, mockDiscordMessage } from '@/domain/test';
 import { faker } from '@faker-js/faker';
+import { ButtonInteraction } from 'discord.js';
 
 describe('DiscordCommands', () => {
   describe('Message', () => {
@@ -34,6 +35,16 @@ describe('DiscordCommands', () => {
       } as any;
       const message = getCommand(mockMessage);
       expect(message).toEqual({ args: commandValue, command: commandName });
+    });
+  });
+
+  describe('ButtonInteraction', () => {
+    test('should return a message with args and command', () => {
+      const mockMessage = mockDiscordButtonInteraction() as unknown as ButtonInteraction;
+      const commandName = faker.random.word();
+      mockMessage.customId = commandName;
+      const message = getCommand(mockMessage);
+      expect(message).toEqual({ args: '', command: commandName });
     });
   });
 });
