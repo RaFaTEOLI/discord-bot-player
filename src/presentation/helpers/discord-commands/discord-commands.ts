@@ -10,10 +10,13 @@ export const getCommand = (
 
   if (message instanceof Message) {
     args = message.content.slice(prefix.length).trim().split(/ +/g);
+    command = args.shift();
   }
 
-  if (message instanceof Message) {
-    command = args.shift();
+  if (message instanceof ChatInputCommandInteraction) {
+    // @ts-expect-error
+    args = message.options._hoistedOptions.map(option => option.value);
+    command = message.commandName;
   }
 
   return { command, args: args.join(' ') };
