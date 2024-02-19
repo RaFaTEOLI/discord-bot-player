@@ -4,10 +4,8 @@ import { SendMessageChannel } from '@/data/protocols/discord/send-message-channe
 
 export const mockSendMessageChannel = (): SendMessageChannel => {
   class SendMessageChannelStub implements SendMessageChannel {
-    async send(
-      options: string | MessagePayload | MessageCreateOptions
-    ): Promise<Message<true>> {
-      return await Promise.resolve(mockDiscordMessage());
+    async send(options: string | MessagePayload | MessageCreateOptions): Promise<Message<true>> {
+      return await Promise.resolve(mockDiscordMessage() as Message<true>);
     }
   }
   return new SendMessageChannelStub();
