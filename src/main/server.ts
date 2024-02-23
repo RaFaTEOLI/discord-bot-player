@@ -280,7 +280,7 @@ const handleCommands = async (
       }
     }
 
-    if (message instanceof Message) {
+    if (message instanceof Message || message instanceof ChatInputCommandInteraction) {
       const executeCommand = makeDiscordExecuteCommandFactory(client, message, settings);
       try {
         return await executeCommand.execute(command);
