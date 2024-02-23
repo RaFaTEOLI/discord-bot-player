@@ -5,6 +5,7 @@ import { mockDiscordMessage, mockDiscordQueue } from '@/data/test';
 import { Message } from 'discord.js';
 import { Playlist, Queue } from '@rafateoli/discord-music-player';
 import { describe, test, expect, vi } from 'vitest';
+import { mockDiscordChatInputInteraction } from '@/domain/test';
 
 type SutTypes = {
   sut: DiscordPlayMusic;
@@ -94,5 +95,19 @@ describe('DiscordPlayMusic', () => {
 
     await sut.play(faker.internet.url());
     expect(joinSpy).not.toHaveBeenCalled();
+  });
+
+  test('should call queue.join when message is ChatInputCommandInteraction', async () => {
+    const discordChatInputCommandInteraction = mockDiscordChatInputInteraction();
+    vi.spyOn(discordChatInputCommandInteraction, 'guild', 'get').mockReturnValueOnce({
+      channels: {
+        cache: [{ type: 2, members: { has: () => true } }]
+      }
+    } as any);
+    const { sut, discordQueue } = makeSut(mockDiscordQueue(), discordChatInputCommandInteraction);
+    const joinSpy = vi.spyOn(discordQueue, 'join');
+
+    await sut.play(faker.internet.url());
+    expect(joinSpy).toHaveBeenCalled();
   });
 });
