@@ -1,5 +1,12 @@
 import 'module-alias/register';
-import { ActivityType, ButtonInteraction, Client, GatewayIntentBits, Message } from 'discord.js';
+import {
+  ActivityType,
+  ButtonInteraction,
+  ChatInputCommandInteraction,
+  Client,
+  GatewayIntentBits,
+  Message
+} from 'discord.js';
 import { Player, RepeatMode, Song } from '@rafateoli/discord-music-player';
 import 'dotenv/config';
 import { DiscordSendMessage } from '@/data/usecases/send-message/discord-send-message';
@@ -11,6 +18,7 @@ import { makeRemoteSaveMusicFactory } from './factories/usecases/remote/remote-s
 import { makeRemoteSaveQueueFactory } from './factories/usecases/remote/remote-save-queue-factory';
 import { Queue } from '@/domain/models/queue';
 import { playerButtons, getErrorMessageFromError } from '@/presentation/helpers';
+import { getCommand } from '@/presentation/helpers/discord-commands/discord-commands';
 
 const client = new Client({
   intents: [
@@ -70,13 +78,11 @@ void (async () => {
 const remoteSaveQueue = makeRemoteSaveQueueFactory();
 
 const handleCommands = async (
-  message: Message | ButtonInteraction,
+  message: Message | ButtonInteraction | ChatInputCommandInteraction,
   sendMessage?: DiscordSendMessage
 ): Promise<void> => {
   if (message) {
-    const args =
-      message instanceof Message ? message.content.slice(settings?.prefix?.length).trim().split(/ +/g) : [];
-    const command = message instanceof Message ? args.shift() : message.customId.split(';')[0];
+    const { args, command } = getCommand(message);
 
     console.info(`Command received: ${command}`);
     console.info(`Arguments received: ${args}`);
@@ -85,9 +91,12 @@ const handleCommands = async (
     if (message?.guild?.id) {
       const guildQueue = client.player.getQueue(message?.guild?.id);
 
-      if (message instanceof Message && (command === 'play' || command === 'playlist')) {
+      if (
+        (message instanceof Message || message instanceof ChatInputCommandInteraction) &&
+        (command === 'play' || command === 'playlist')
+      ) {
         const queue = client.player.createQueue(message.guild.id);
-        if (message?.member?.voice?.channel) {
+        if (message instanceof Message && message?.member?.voice?.channel) {
           await queue.join(message?.member?.voice?.channel);
         } else {
           // Auto assign a channel for the bot to join
@@ -107,7 +116,7 @@ const handleCommands = async (
         }
 
         if (command === 'play') {
-          await queue.play(args.join(' ')).catch(err => {
+          await queue.play(args).catch(err => {
             console.error(err);
             if (!guildQueue) queue.stop();
           });
@@ -115,7 +124,7 @@ const handleCommands = async (
         }
 
         if (command === 'playlist') {
-          await queue.playlist(args.join(' ')).catch(err => {
+          await queue.playlist(args).catch(err => {
             console.error(err);
             if (!guildQueue) queue.stop();
           });
@@ -271,7 +280,7 @@ const handleCommands = async (
       }
     }
 
-    if (message instanceof Message) {
+    if (message instanceof Message || message instanceof ChatInputCommandInteraction) {
       const executeCommand = makeDiscordExecuteCommandFactory(client, message, settings);
       try {
         return await executeCommand.execute(command);
@@ -297,8 +306,13 @@ client.on('messageCreate', async message => {
   await handleCommands(message, sendMessage);
 });
 
-client.on('interactionCreate', async (message: ButtonInteraction) => {
-  await message.deferUpdate();
+client.on('interactionCreate', async (message: ButtonInteraction | ChatInputCommandInteraction) => {
+  if (message instanceof ButtonInteraction) {
+    await message.deferUpdate();
+  }
+  if (message instanceof ChatInputCommandInteraction) {
+    await message.reply({ content: 'Processing...', ephemeral: true });
+  }
   await handleCommands(message);
 });
 
