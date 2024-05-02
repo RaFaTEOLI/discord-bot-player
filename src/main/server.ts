@@ -278,6 +278,10 @@ const handleCommands = async (
         });
         return;
       }
+
+      if (command === 'move') {
+        guildQueue.move(parseInt(args[0]), parseInt(args[1]));
+      }
     }
 
     if (message instanceof Message || message instanceof ChatInputCommandInteraction) {
