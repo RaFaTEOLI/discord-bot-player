@@ -31,7 +31,7 @@
     "@types/amqplib": "^0.10.1",
     "@types/node": "^18.8.3",
     "@typescript-eslint/eslint-plugin": "^5.39.0",
-    "@vitest/coverage-istanbul": "^1.5.1",
+    "@vitest/coverage-istanbul": "^2.0.4",
     "eslint": "^8.24.0",
     "eslint-config-standard-with-typescript": "^23.0.0",
     "eslint-plugin-import": "^2.26.0",
@@ -42,7 +42,7 @@
     "lint-staged": "^13.0.3",
     "rimraf": "^3.0.2",
     "typescript": "^5.2.2",
-    "vitest": "^1.5.1"
+    "vitest": "^2.0.4"
   },
   "engines": {
     "node": ">=16.x"
