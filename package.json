@@ -1,6 +1,6 @@
 {
   "name": "discord-bot-player",
-  "version": "1.5.3",
+  "version": "1.5.4",
   "description": "Discord Bot service to play songs",
   "main": "src/main/server.ts",
   "repository": "git@github.com:RaFaTEOLI/discord-bot-player.git",
