@@ -18,7 +18,7 @@
   },
   "dependencies": {
     "@discordjs/opus": "^0.8.0",
-    "@rafateoli/discord-music-player": "^9.2.5",
+    "@rafateoli/discord-music-player": "^9.2.6",
     "amqplib": "^0.10.3",
     "discord.js": "^14.13.0",
     "dotenv": "^16.0.3",
