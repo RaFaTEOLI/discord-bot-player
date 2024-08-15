@@ -218,7 +218,7 @@
   dependencies:
     discord-api-types "0.37.83"
 
-"@discordjs/node-pre-gyp@^0.4.4", "@discordjs/node-pre-gyp@^0.4.5":
+"@discordjs/node-pre-gyp@^0.4.5":
   version "0.4.5"
   resolved "https://registry.yarnpkg.com/@discordjs/node-pre-gyp/-/node-pre-gyp-0.4.5.tgz#b33e38cedd821268c75923641783c68fcd1b55ae"
   integrity sha512-YJOVVZ545x24mHzANfYoy0BJX5PDyeZlpiJjDkUBM/V/Ao7TFX9lcUvCN4nr0tbr5ubeaXxtEBILUrHtTphVeQ==
@@ -232,14 +232,6 @@
     rimraf "^3.0.2"
     semver "^7.3.5"
     tar "^6.1.11"
-
-"@discordjs/opus@^0.8.0":
-  version "0.8.0"
-  resolved "https://registry.yarnpkg.com/@discordjs/opus/-/opus-0.8.0.tgz#dae2d220a7942736343021f9af2b2b921d482c46"
-  integrity sha512-uHE7OmHEmP8YM0yvsH3iSdacdeghO0qTkF0CIkV07Tg0qdyOLUVkoZHj5Zcpge9rC4qb/JvTS2xRgttSZLM43Q==
-  dependencies:
-    "@discordjs/node-pre-gyp" "^0.4.4"
-    node-addon-api "^5.0.0"
 
 "@discordjs/opus@^0.9.0":
   version "0.9.0"
@@ -295,10 +287,10 @@
     tslib "^2.6.2"
     ws "^8.16.0"
 
-"@distube/ytdl-core@^4.13.3":
-  version "4.14.3"
-  resolved "https://registry.yarnpkg.com/@distube/ytdl-core/-/ytdl-core-4.14.3.tgz#ce862c7f6e68bf60a85a2d17a77a5f9c738f6b53"
-  integrity sha512-z6i5EVGEuKhuvuRNyIqafBSs5aRA28HssnWehCRhEtYrxeFgXImfmpKTjUusHYU5vQt1swSVPVb2JCd22P0CPA==
+"@distube/ytdl-core@^4.13.4":
+  version "4.14.4"
+  resolved "https://registry.yarnpkg.com/@distube/ytdl-core/-/ytdl-core-4.14.4.tgz#6ecb7e70f6eea691a562ccb7920d5d334b383d0f"
+  integrity sha512-dHb4GW3qATIjRsS6VIhm3Pop7FdUcDFhsnyQlsPeXW7UhTPuNS0BmraKiTpFbpp0Ky+rxBQjJBfPRFsM+dT1fg==
   dependencies:
     http-cookie-agent "^6.0.5"
     m3u8stream "^0.8.6"
@@ -558,15 +550,15 @@
   resolved "https://registry.yarnpkg.com/@pkgjs/parseargs/-/parseargs-0.11.0.tgz#a77ea742fab25775145434eb1d2328cf5013ac33"
   integrity sha512-+1VkjdD0QBLPodGrJUeqarH8VAIvQODIbwh9XpP5Syisf7YoQgsJKPNFoqqLQlu+VQ/tVSshMR6loPMn8U+dPg==
 
-"@rafateoli/discord-music-player@^9.2.6":
-  version "9.2.6"
-  resolved "https://registry.yarnpkg.com/@rafateoli/discord-music-player/-/discord-music-player-9.2.6.tgz#98abe80e5446c6582c2c5dbd35f367d2bccf6df4"
-  integrity sha512-9SQYkHyXGehTxG77hojgaelF8u2I/Y06HhH3RfWXfqwz8FhMAU0Pu2hXTjhYQTNuOztW6miZ/jd57IjUGP9MfQ==
+"@rafateoli/discord-music-player@^9.2.7":
+  version "9.2.7"
+  resolved "https://registry.yarnpkg.com/@rafateoli/discord-music-player/-/discord-music-player-9.2.7.tgz#911c261f6f8051cca8cbe4673b21dbd314964325"
+  integrity sha512-hvIwLjbravnuUS/lDyA0plfa4rxaVaKCchnsQfFYpjYCHXs6QI/3Kwbx6rG9GwDJdS63Wgi6m5UHF4kfgxq3iA==
   dependencies:
     "@discordjs/opus" "^0.9.0"
     "@discordjs/voice" "^0.17.0"
-    "@distube/ytdl-core" "^4.13.3"
-    "@rafateoli/discord-ytdl-core" "^5.0.9"
+    "@distube/ytdl-core" "^4.13.4"
+    "@rafateoli/discord-ytdl-core" "^5.0.10"
     apple-music-metadata "^1.0.10"
     axios "^0.22.0"
     axios-retry "^3.2.0"
@@ -579,10 +571,10 @@
     youtubei "^0.0.1-rc.34"
     ytsr "^3.8.4"
 
-"@rafateoli/discord-ytdl-core@^5.0.9":
-  version "5.0.9"
-  resolved "https://registry.yarnpkg.com/@rafateoli/discord-ytdl-core/-/discord-ytdl-core-5.0.9.tgz#584ac48eb24e9012abf6389730491f4b2b506c73"
-  integrity sha512-nboi+DREfnjrbEsWUbQKE9mdpwxNNc7o4TfmCkYMt7ADKmzq/hEtJx75OWsH8T3vpVWTZsJhpMmO7tEfRKuYdg==
+"@rafateoli/discord-ytdl-core@^5.0.10":
+  version "5.0.10"
+  resolved "https://registry.yarnpkg.com/@rafateoli/discord-ytdl-core/-/discord-ytdl-core-5.0.10.tgz#a23c43ca083ce829ce1dca68faa9a60a8c123ab7"
+  integrity sha512-UE9nHzchxb8JBMEZFpvDEXI/UDvPIrkAV7o/BPUr6SSJtsH7UH6h6Hw8JTp2KLmlYYnBOBaUaYIKDkPyacTuwQ==
   dependencies:
     prism-media "^1.2.9"
 
