@@ -40,7 +40,7 @@ const player = new Player(client, {
 
 client.player = player;
 
-client.on('ready', () => {
+client.on('clientReady', () => {
   console.info(`I am ready to Play as ${process.env.BOT_NAME} 🎶`);
   client.user?.setActivity(process.env.BOT_ACTIVITY ?? 'Waiting...', {
     type: ActivityType.Listening
@@ -72,6 +72,9 @@ void (async () => {
     if (welcomeChannel?.isTextBased()) {
       sendWelcomeMessage = makeDiscordSendMessageFactory(welcomeChannel);
     }
+
+    // const textBasedChannels = client.channels.cache.filter(channel => channel.isTextBased());
+    // console.log(`Saving all channels to the database: ${JSON.stringify(textBasedChannels)}`);
   }, 5000);
 })();
 
@@ -326,6 +329,18 @@ client.on('guildMemberAdd', async member => {
   await sendWelcomeMessage?.send({
     title: `🙌  Welcome to the server ${member.displayName}`
   });
+});
+
+client.on('channelCreate', async channel => {
+  console.info(`Channel created: ${channel}`);
+});
+
+client.on('channelUpdate', async channel => {
+  console.info(`Channel updated: ${channel}`);
+});
+
+client.on('channelDelete', async channel => {
+  console.info(`Channel deleted: ${channel}`);
 });
 
 const remoteSaveMusic = makeRemoteSaveMusicFactory();
