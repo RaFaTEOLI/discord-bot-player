@@ -15,6 +15,8 @@ export default defineConfig({
       ],
       exclude: [
         'src/main/**',
+        'src/infra/music/**',
+        'src/domain/music/**',
         'src/presentation/helpers/index.ts',
         'src/data/protocols/queue/index.ts',
         'src/**/test/*'

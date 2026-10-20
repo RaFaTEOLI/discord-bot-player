@@ -19,18 +19,19 @@ const makeSut = (): SutTypes => {
 };
 
 describe('DiscordCreateQueue', () => {
-  test('should call client.player.createQueue with message guild id', async () => {
+  test('should call client.music.createQueue with message guild id', async () => {
     const { sut, discordMessage, discordClientStub } = makeSut();
-    const createQueueSpy = vi.spyOn(discordClientStub.player, 'createQueue');
+    const createQueueSpy = vi.spyOn(discordClientStub.music, 'createQueue');
 
-    sut.createQueue();
+    sut.createQueue(discordMessage.guild.id);
     expect(createQueueSpy).toHaveBeenCalledWith(discordMessage.guild.id);
   });
 
-  test('should return queue on client.player.createQueue success', async () => {
-    const { sut } = makeSut();
+  test('should return queue on client.music.createQueue success', async () => {
+    const { sut, discordMessage } = makeSut();
 
-    const queue = sut.createQueue();
-    expect(queue).toEqual({});
+    const queue = sut.createQueue(discordMessage.guild.id);
+    expect(queue).toBeDefined();
+    expect(queue.songs).toBeDefined();
   });
 });

@@ -14,13 +14,15 @@
     "debug": "tsx watch --inspect=0.0.0.0:9222 --nolazy src/main/server.ts",
     "test": "vitest --run --passWithNoTests --silent",
     "test:staged": "yarn test related",
-    "test:ci": "yarn test --coverage"
+    "test:ci": "yarn test --coverage",
+    "validate:youtube-cookie": "tsx scripts/validate-youtube-cookie.ts"
   },
   "dependencies": {
     "@discordjs/opus": "^0.10.0",
-    "@rafateoli/discord-music-player": "^9.3.1",
+    "@discordjs/voice": "^0.19.0",
     "@snazzah/davey": "^0.1.7",
     "amqplib": "^0.10.3",
+    "axios": "^1.7.9",
     "discord.js": "^14.24.0",
     "dotenv": "^16.0.3",
     "isomorphic-unfetch": "^3.1.0",

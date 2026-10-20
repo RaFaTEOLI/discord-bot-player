@@ -2,12 +2,12 @@ import 'module-alias/register';
 import {
   ActivityType,
   ButtonInteraction,
+  ChannelType,
   ChatInputCommandInteraction,
   Client,
   GatewayIntentBits,
   Message
 } from 'discord.js';
-import { Player, RepeatMode, Song } from '@rafateoli/discord-music-player';
 import 'dotenv/config';
 import { DiscordSendMessage } from '@/data/usecases/send-message/discord-send-message';
 import { makeDiscordSendMessageFactory } from './factories/usecases/discord/discord-send-message-factory';
@@ -17,8 +17,12 @@ import { PlayerModel } from '@/domain/models/player';
 import { makeRemoteSaveMusicFactory } from './factories/usecases/remote/remote-save-music-factory';
 import { makeRemoteSaveQueueFactory } from './factories/usecases/remote/remote-save-queue-factory';
 import { Queue } from '@/domain/models/queue';
+import type { QueuedTrack } from '@/domain/music/queued-track';
+import { MusicRepeatMode } from '@/domain/music/repeat-mode';
 import { playerButtons, getErrorMessageFromError } from '@/presentation/helpers';
 import { getCommand } from '@/presentation/helpers/discord-commands/discord-commands';
+import { bootstrapPlayDl } from '@/infra/music/bootstrap-play-dl';
+import { createGuildMusicManager } from './factories/music/guild-music-manager-factory';
 
 const client = new Client({
   intents: [
@@ -30,15 +34,8 @@ const client = new Client({
   ]
 }) as DiscordClient;
 
-const player = new Player(client, {
-  leaveOnEmpty: true,
-  leaveOnEnd: true,
-  timeout: 0,
-  volume: 150,
-  quality: 'high'
-});
-
-client.player = player;
+const music = createGuildMusicManager(client);
+client.music = music;
 
 client.on('clientReady', () => {
   console.info(`I am ready to Play as ${process.env.BOT_NAME} 🎶`);
@@ -60,8 +57,8 @@ let sendMusicMessage: DiscordSendMessage | null = null;
 let sendWelcomeMessage: DiscordSendMessage | null = null;
 
 void (async () => {
+  await bootstrapPlayDl();
   await client.login(settings.token);
-  // Channel Dispatchers
   setTimeout(() => {
     const musicChannel = client.channels.cache.get(process.env.BOT_MUSIC_CHANNEL);
     const welcomeChannel = client.channels.cache.get(process.env.BOT_WELCOME_CHANNEL);
@@ -72,9 +69,6 @@ void (async () => {
     if (welcomeChannel?.isTextBased()) {
       sendWelcomeMessage = makeDiscordSendMessageFactory(welcomeChannel);
     }
-
-    // const textBasedChannels = client.channels.cache.filter(channel => channel.isTextBased());
-    // console.log(`Saving all channels to the database: ${JSON.stringify(textBasedChannels)}`);
   }, 5000);
 })();
 
@@ -92,26 +86,26 @@ const handleCommands = async (
 
     console.info(`Guild ID: ${message?.guild?.id}`);
     if (message?.guild?.id) {
-      const guildQueue = client.player.getQueue(message?.guild?.id);
+      const guildQueue = client.music.getQueue(message?.guild?.id);
+      const replyTarget = sendMessage ?? sendMusicMessage;
 
       if (
         (message instanceof Message || message instanceof ChatInputCommandInteraction) &&
         (command === 'play' || command === 'playlist')
       ) {
-        const queue = client.player.createQueue(message.guild.id);
+        const queue = client.music.createQueue(message.guild.id);
         if (message instanceof Message && message?.member?.voice?.channel) {
           await queue.join(message?.member?.voice?.channel);
         } else {
-          // Auto assign a channel for the bot to join
           const voiceChannels = message.guild.channels.cache
-            .filter(channel => channel.type === 2 && Array.from(channel.members).length > 0)
+            .filter(channel => channel.type === ChannelType.GuildVoice && Array.from(channel.members).length > 0)
             .map(channel => channel.id);
 
           if (voiceChannels.length) {
             await queue.join(voiceChannels[0]);
           } else {
             console.error('There are no voice channel with members to play');
-            await sendMusicMessage.send({
+            await sendMusicMessage?.send({
               title: '🔇 No Voice Channel',
               description: 'There are no voice channel with members to play'
             });
@@ -119,7 +113,7 @@ const handleCommands = async (
         }
 
         if (command === 'play') {
-          await queue.play(args).catch(err => {
+          await queue.enqueue(args, { forcePlaylist: false }).catch(err => {
             console.error(err);
             if (!guildQueue) queue.stop();
           });
@@ -127,7 +121,7 @@ const handleCommands = async (
         }
 
         if (command === 'playlist') {
-          await queue.playlist(args).catch(err => {
+          await queue.enqueue(args, { forcePlaylist: true }).catch(err => {
             console.error(err);
             if (!guildQueue) queue.stop();
           });
@@ -147,17 +141,17 @@ const handleCommands = async (
       }
 
       if (command === 'removeLoop') {
-        guildQueue?.setRepeatMode(RepeatMode.DISABLED); // or 0 instead of RepeatMode.DISABLED
+        guildQueue?.setRepeatMode(MusicRepeatMode.Disabled);
         return;
       }
 
       if (command === 'toggleLoop') {
-        guildQueue?.setRepeatMode(RepeatMode.SONG); // or 1 instead of RepeatMode.SONG
+        guildQueue?.setRepeatMode(MusicRepeatMode.Track);
         return;
       }
 
       if (command === 'toggleQueueLoop') {
-        guildQueue?.setRepeatMode(RepeatMode.QUEUE); // or 2 instead of RepeatMode.QUEUE
+        guildQueue?.setRepeatMode(MusicRepeatMode.Queue);
         return;
       }
 
@@ -167,7 +161,11 @@ const handleCommands = async (
       }
 
       if (command === 'seek') {
-        void guildQueue?.seek(parseInt(args[0]) * 1000);
+        guildQueue?.seek(parseInt(args[0]) * 1000);
+        await sendMusicMessage?.send({
+          title: '🎵  Seek',
+          description: 'Seek is not supported in this version of the player.'
+        });
         return;
       }
 
@@ -188,7 +186,7 @@ const handleCommands = async (
           title: '🎵  Queue'
         };
 
-        await remoteSaveQueue.save({ songs: mapQueue(guildQueue?.songs) });
+        await remoteSaveQueue.save({ songs: mapQueue(guildQueue?.songs ?? []) });
 
         const fields: any = [];
         guildQueue?.songs.forEach((song, i) => {
@@ -238,7 +236,7 @@ const handleCommands = async (
 
       if (command === 'nowPlaying') {
         console.info(`Now playing: ${guildQueue?.nowPlaying}`);
-        await sendMessage.send({
+        await replyTarget?.send({
           title: '🎵  Now Playing',
           fields: { name: 'Song', value: guildQueue?.nowPlaying?.name ?? '' }
         });
@@ -283,7 +281,7 @@ const handleCommands = async (
       }
 
       if (command === 'move') {
-        guildQueue.move(parseInt(args[0]), parseInt(args[1]));
+        guildQueue?.move(parseInt(args[0]), parseInt(args[1]));
       }
     }
 
@@ -294,20 +292,18 @@ const handleCommands = async (
       } catch (error) {
         console.error(error);
         const errorMessage = getErrorMessageFromError(error);
-        await sendMessage.send(errorMessage);
+        await sendMessage?.send(errorMessage);
       }
     }
   }
 };
 
 client.on('messageCreate', async message => {
-  // Message Validations
   if (message.author.bot && message.author.username !== `${process.env.BOT_NAME} Web`) {
     return;
   }
   if (!message.content.startsWith(settings?.prefix ?? '!')) return;
 
-  // Send message to current channel
   const sendMessage = makeDiscordSendMessageFactory(message.channel);
 
   await handleCommands(message, sendMessage);
@@ -320,10 +316,9 @@ client.on('interactionCreate', async (message: ButtonInteraction | ChatInputComm
   if (message instanceof ChatInputCommandInteraction) {
     await message.reply({ content: 'Processing...', ephemeral: true });
   }
-  await handleCommands(message);
+  await handleCommands(message, sendMusicMessage ?? undefined);
 });
 
-// New Member
 client.on('guildMemberAdd', async member => {
   console.info(`New member added: ${member}`);
   await sendWelcomeMessage?.send({
@@ -345,7 +340,7 @@ client.on('channelDelete', async channel => {
 
 const remoteSaveMusic = makeRemoteSaveMusicFactory();
 
-const mapQueue = (songs: Song[]): Queue =>
+const mapQueue = (songs: QueuedTrack[]): Queue =>
   songs
     .map(song => ({
       name: song?.name,
@@ -356,18 +351,16 @@ const mapQueue = (songs: Song[]): Queue =>
     }))
     .slice(0, 30) as Queue;
 
-// Init the event listener only once (at the top of your code).
-client.player
-  // Emitted when channel was empty.
+music
   .on('channelEmpty', async queue => {
     console.info(`Everyone left the Voice Channel, queue ended. -> ${queue}`);
     await sendMusicMessage?.send({
       title: '🎵  Everyone left the Voice Channel, queue ended.'
     });
     await remoteSaveMusic.save({ name: null, duration: null });
+    await remoteSaveQueue.save({ songs: [] });
   })
-  // Emitted when a song was added to the queue.
-  .on('songAdd', async (queue, song) => {
+  .on('songAdd', async (queue, song: QueuedTrack) => {
     console.info(`Song ${song} was added to the queue. -> ${queue}`);
     await sendMusicMessage?.send({
       title: '🎵  Song added to the queue.',
@@ -378,8 +371,7 @@ client.player
     });
     await remoteSaveQueue.save({ songs: mapQueue(queue.songs) });
   })
-  // Emitted when a playlist was added to the queue.
-  .on('playlistAdd', async (queue, playlist) => {
+  .on('playlistAdd', async (queue, playlist: { name: string; songs: QueuedTrack[] }) => {
     console.info(`Playlist ${playlist.name} with ${playlist?.songs?.length} songs was added to the queue.`);
     await sendMusicMessage?.send({
       title: '🎵  Playlist Added!',
@@ -387,7 +379,6 @@ client.player
     });
     await remoteSaveQueue.save({ songs: mapQueue(queue.songs) });
   })
-  // Emitted when there was no more music to play.
   .on('queueDestroyed', async queue => {
     console.info(`The queue was destroyed. -> ${queue}`);
     await sendMusicMessage?.send({
@@ -395,7 +386,6 @@ client.player
     });
     await remoteSaveQueue.save({ songs: [] });
   })
-  // Emitted when the queue was destroyed (either by ending or stopping).
   .on('queueEnd', async queue => {
     console.info(`The queue has ended. -> ${queue}`);
     await sendMusicMessage?.send({
@@ -404,8 +394,7 @@ client.player
     await remoteSaveMusic.save({ name: null, duration: null });
     await remoteSaveQueue.save({ songs: [] });
   })
-  // Emitted when a song changed.
-  .on('songChanged', async (queue, newSong, oldSong) => {
+  .on('songChanged', async (queue, newSong: QueuedTrack, _oldSong: QueuedTrack | null) => {
     console.info(`${newSong} is now playing`);
     await sendMusicMessage?.send({
       title: '🎵  Now Playing',
@@ -418,8 +407,7 @@ client.player
     await remoteSaveMusic.save({ name: newSong.name, duration: newSong.duration });
     await remoteSaveQueue.save({ songs: mapQueue(queue.songs) });
   })
-  // Emitted when a first song in the queue started playing.
-  .on('songFirst', async (queue, song) => {
+  .on('songFirst', async (queue, song: QueuedTrack) => {
     console.info(`Started Playing ${song}`);
     await sendMusicMessage?.send({
       title: '🎵  Started Playing',
@@ -431,7 +419,6 @@ client.player
     });
     await remoteSaveMusic.save({ name: song.name, duration: song.duration });
   })
-  // Emitted when someone disconnected the bot from the channel.
   .on('clientDisconnect', async queue => {
     console.info(`I was kicked from the Voice Channel, queue ended. -> ${queue}`);
     await sendMusicMessage?.send({
@@ -440,16 +427,14 @@ client.player
     await remoteSaveMusic.save({ name: null, duration: null });
     await remoteSaveQueue.save({ songs: [] });
   })
-  // Emitted when deafenOnJoin is true and the bot was undeafened
   .on('clientUndeafen', async queue => {
     console.info(`I got undefeanded. -> ${queue}`);
     await sendMusicMessage?.send({
       title: '🎵  I got undefeanded.'
     });
   })
-  // Emitted when there was an error in runtime
   .on('error', async (error, queue) => {
-    console.error(`${error} in ${queue.guild.name}`);
+    console.error(`${error} in ${queue.guild?.name ?? 'unknown guild'}`);
     const errorMessage = getErrorMessageFromError(error);
-    await sendMusicMessage.send(errorMessage);
+    await sendMusicMessage?.send(errorMessage);
   });

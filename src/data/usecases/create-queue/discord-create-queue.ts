@@ -1,6 +1,6 @@
 import { ChatInputCommandInteraction, Message } from 'discord.js';
 import 'dotenv/config';
-import { Queue } from '@rafateoli/discord-music-player';
+import type { IGuildMusicQueue } from '@/domain/music/guild-music-queue';
 import { DiscordClient } from '@/domain/models/discord-client';
 import { CreateQueue } from '@/domain/usecases/create-queue';
 
@@ -10,7 +10,7 @@ export class DiscordCreateQueue implements CreateQueue {
     private readonly message: Message | ChatInputCommandInteraction
   ) {}
 
-  createQueue(): Queue {
-    return this.client.player.createQueue(this.message.guild.id);
+  createQueue(guildId: string): IGuildMusicQueue {
+    return this.client.music.createQueue(guildId);
   }
 }

@@ -2,6 +2,40 @@ export const getErrorMessageFromError = (error: any): { title: string; descripti
   let errorTitle = '⛔  Error.';
   let errorMessage = error as string;
 
+  const msg = typeof error?.message === 'string' ? error.message : '';
+  if (msg === 'SpotifyNotConfigured') {
+    return {
+      title: '🎵  Spotify not configured',
+      description:
+        'Add SPOTIFY_CLIENT_ID and SPOTIFY_CLIENT_SECRET to the environment to play Spotify links. YouTube links work without them.'
+    };
+  }
+  if (msg === 'UnsupportedSource') {
+    return {
+      title: '🎵  Unsupported link',
+      description: 'Only YouTube and Spotify links are supported right now.'
+    };
+  }
+  if (msg === 'InvalidUrl') {
+    return {
+      title: '🎵  Invalid link',
+      description: 'That does not look like a supported music URL.'
+    };
+  }
+  if (msg === 'SpotifyAuthFailed' || msg.startsWith('SpotifyApiError:')) {
+    return {
+      title: '🎵  Spotify error',
+      description: 'Could not reach Spotify. Check your credentials and try again.'
+    };
+  }
+  if (msg.includes('ERR_INVALID_URL') || msg.includes('Invalid URL')) {
+    return {
+      title: '🎵  YouTube playback',
+      description:
+        'YouTube did not return a usable audio URL (often bot/consent blocking). Set YOUTUBE_COOKIE in your environment with browser cookies for youtube.com, then restart the bot. See play-dl setToken( youtube.cookie ).'
+    };
+  }
+
   switch (error.toString()) {
     // Thrown when the YouTube search could not find any song with that query.
     case 'SearchIsNull':

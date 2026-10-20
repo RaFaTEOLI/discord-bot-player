@@ -76,6 +76,31 @@ describe('DiscordErrors', () => {
       description: 'Something went wrong! Try again later'
     });
   });
+  test('should return SpotifyNotConfigured error message', () => {
+    const errorMessage = getErrorMessageFromError(new Error('SpotifyNotConfigured'));
+    expect(errorMessage.title).toContain('Spotify');
+  });
+  test('should return UnsupportedSource error message', () => {
+    const errorMessage = getErrorMessageFromError(new Error('UnsupportedSource'));
+    expect(errorMessage.title).toContain('Unsupported');
+  });
+  test('should return InvalidUrl error message', () => {
+    const errorMessage = getErrorMessageFromError(new Error('InvalidUrl'));
+    expect(errorMessage.title).toContain('Invalid');
+  });
+  test('should return SpotifyAuthFailed error message', () => {
+    const errorMessage = getErrorMessageFromError(new Error('SpotifyAuthFailed'));
+    expect(errorMessage.title).toContain('Spotify');
+  });
+  test('should return SpotifyApiError error message', () => {
+    const errorMessage = getErrorMessageFromError(new Error('SpotifyApiError:401'));
+    expect(errorMessage.title).toContain('Spotify');
+  });
+  test('should return YouTube Invalid URL hint', () => {
+    const errorMessage = getErrorMessageFromError(new Error('ERR_INVALID_URL'));
+    expect(errorMessage.title).toContain('YouTube');
+    expect(errorMessage.description).toContain('YOUTUBE_COOKIE');
+  });
   test('should return default error message', () => {
     const errorMessage = getErrorMessageFromError('UNKNOWN');
     expect(errorMessage).toEqual({

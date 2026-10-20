@@ -1,18 +1,35 @@
+import { Client, GatewayIntentBits } from 'discord.js';
 import { DiscordClient } from '@/domain/models/discord-client';
-import { Player, Queue } from '@rafateoli/discord-music-player';
 import { mockDiscordQueue } from './mock-discord-queue';
 
+class MusicStub {
+  createQueue(_guildId: string): ReturnType<typeof mockDiscordQueue> {
+    return mockDiscordQueue();
+  }
+
+  getQueue(_guildId: string): undefined {
+    return undefined;
+  }
+
+  on(): this {
+    return this;
+  }
+
+  off(): this {
+    return this;
+  }
+
+  emit(): boolean {
+    return true;
+  }
+
+  setup(): void {}
+}
+
 export const mockDiscordClient = (): DiscordClient => {
-  class DiscordPlayer {
-    createQueue(guildId: string): Queue {
-      return mockDiscordQueue();
-    }
-  }
-  class ClientStub {
-    player: Player;
-    constructor() {
-      this.player = new DiscordPlayer() as Player;
-    }
-  }
-  return new ClientStub() as DiscordClient;
+  const client = new Client({
+    intents: [GatewayIntentBits.Guilds]
+  }) as DiscordClient;
+  client.music = new MusicStub() as DiscordClient['music'];
+  return client;
 };

@@ -1,17 +1,17 @@
-import { DiscordClient } from '@/domain/models/discord-client';
+import type { PlayMusicResult } from '@/domain/usecases/play-music';
 import { PlayMusic } from '@/domain/usecases/play-music';
-import { Song } from '@rafateoli/discord-music-player';
-import { Message } from 'discord.js';
-import { mockDiscordClient } from './mock-discord-client';
-import { mockDiscordMessage } from './mock-discord-message';
+import { faker } from '@faker-js/faker';
 
 export const mockDiscordPlayMusic = (): PlayMusic => {
   class DiscordPlayMusicStub implements PlayMusic {
-    constructor(private readonly client: DiscordClient, private readonly message: Message) {}
-
-    async play(url: string): Promise<Song> {
-      return await Promise.resolve(null);
+    async play(url: string, _playlist?: boolean): Promise<PlayMusicResult> {
+      return await Promise.resolve({
+        url,
+        isPlaylist: Boolean(_playlist),
+        firstTitle: faker.lorem.words(3),
+        trackCount: _playlist ? 2 : 1
+      });
     }
   }
-  return new DiscordPlayMusicStub(mockDiscordClient(), mockDiscordMessage());
+  return new DiscordPlayMusicStub();
 };

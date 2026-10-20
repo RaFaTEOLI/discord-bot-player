@@ -1,93 +1,60 @@
-import { mockDiscordPlaylistModel, mockDiscordSongModel } from '@/domain/test';
 import { faker } from '@faker-js/faker';
-import {
-  Player,
-  PlayerOptions,
-  Playlist,
-  ProgressBarOptions,
-  Queue,
-  RepeatMode,
-  Song,
-  StreamConnection
-} from '@rafateoli/discord-music-player';
-import { Guild } from 'discord.js';
+import type { IGuildMusicQueue, PlayMusicResult, ProgressBarView } from '@/domain/music/guild-music-queue';
+import { MusicRepeatMode } from '@/domain/music/repeat-mode';
+import type { QueuedTrack } from '@/domain/music/queued-track';
+import { mockDiscordSongModel } from '@/domain/test/mock-discord-song';
 
-export const mockDiscordQueue = (): Queue => {
-  class DiscordPlayerQueue {
-    player: Player;
-    guild: Guild;
-    connection: StreamConnection | undefined;
-    songs: Song[];
-    isPlaying: boolean;
-    options: PlayerOptions;
-    repeatMode: RepeatMode;
-    destroyed: boolean;
+export const mockDiscordQueue = (): IGuildMusicQueue => {
+  class GuildMusicQueueStub implements IGuildMusicQueue {
+    guildId = faker.datatype.uuid();
+    guild = undefined;
+    songs: QueuedTrack[] = [mockDiscordSongModel(), mockDiscordSongModel()];
+    nowPlaying: QueuedTrack | undefined = mockDiscordSongModel();
+    volume = faker.datatype.number({ min: 50, max: 200 });
+    paused = false;
+    isPlaying = true;
+    destroyed = false;
 
-    get volume(): number {
-      return faker.datatype.number();
+    async join(_channel: unknown): Promise<void> {
+      await Promise.resolve();
     }
 
-    get paused(): boolean {
-      return false;
+    async enqueue(url: string, _options?: { forcePlaylist?: boolean }): Promise<PlayMusicResult> {
+      return await Promise.resolve({
+        url,
+        isPlaylist: false,
+        firstTitle: faker.lorem.words(3),
+        trackCount: 1
+      });
     }
 
-    get nowPlaying(): Song | undefined {
-      return undefined;
-    }
-
-    async join(channel: string): Promise<any> {
-      return await Promise.resolve();
-    }
-
-    async play(url: string): Promise<Song> {
-      return await Promise.resolve(mockDiscordSongModel(url));
-    }
-
-    async playlist(url: string): Promise<Playlist> {
-      return await Promise.resolve(mockDiscordPlaylistModel(url));
-    }
-
-    async seek(time: number): Promise<true | Song> {
-      return await Promise.resolve(true);
-    }
-
-    skip(index?: number): any {
-      return mockDiscordSongModel();
-    }
+    skip(_count?: number): void {}
 
     stop(): void {}
 
-    shuffle(): Song[] | undefined {
-      return undefined;
-    }
+    setRepeatMode(_mode: MusicRepeatMode): void {}
 
-    setPaused(state?: boolean): boolean | undefined {
-      return undefined;
-    }
-
-    remove(index: number): Song | undefined {
-      return undefined;
-    }
-
-    setVolume(volume: number): boolean {
-      return true;
-    }
+    setVolume(_volume: number): void {}
 
     clearQueue(): void {}
 
-    setRepeatMode(repeatMode: RepeatMode): boolean {
-      return true;
-    }
+    shuffle(): void {}
 
-    createProgressBar(options?: ProgressBarOptions): any {
+    remove(_index: number): void {}
+
+    move(_fromIndex: number, _toIndex: number): void {}
+
+    setPaused(_paused: boolean): void {}
+
+    seek(_ms: number): void {}
+
+    createProgressBar(): ProgressBarView {
       return {
-        [faker.database.column()]: faker.database.type()
+        prettier: '[==============>][0:00/0:00]'
       };
     }
 
-    setData(data: any): void {}
-
     leave(): void {}
   }
-  return new DiscordPlayerQueue() as Queue;
+  return new GuildMusicQueueStub();
 };

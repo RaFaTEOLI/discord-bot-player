@@ -1,5 +1,5 @@
-import { Queue } from '@rafateoli/discord-music-player';
+import type { IGuildMusicQueue } from '@/domain/music/guild-music-queue';
 
 export interface CreateQueue {
-  createQueue: (guildId: string) => Queue;
+  createQueue: (guildId: string) => IGuildMusicQueue;
 }

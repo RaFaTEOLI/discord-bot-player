@@ -3,14 +3,14 @@ import { faker } from '@faker-js/faker';
 import { DiscordPlayMusic } from './discord-play-music';
 import { mockDiscordMessage, mockDiscordQueue } from '@/data/test';
 import { Message } from 'discord.js';
-import { Playlist, Queue } from '@rafateoli/discord-music-player';
+import type { IGuildMusicQueue } from '@/domain/music/guild-music-queue';
 import { describe, test, expect, vi } from 'vitest';
 import { mockDiscordChatInputInteraction } from '@/domain/test';
 
 type SutTypes = {
   sut: DiscordPlayMusic;
   discordMessage: Message;
-  discordQueue: Queue;
+  discordQueue: IGuildMusicQueue;
 };
 
 const makeSut = (discordQueue = mockDiscordQueue(), discordMessage = mockDiscordMessage()): SutTypes => {
@@ -29,21 +29,21 @@ describe('DiscordPlayMusic', () => {
     expect(joinSpy).toHaveBeenCalledWith(discordMessage.member.voice.channel);
   });
 
-  test('should call queue.play with correct url', async () => {
+  test('should call queue.enqueue with correct url', async () => {
     const { sut, discordQueue } = makeSut();
-    const playSpy = vi.spyOn(discordQueue, 'play');
+    const enqueueSpy = vi.spyOn(discordQueue, 'enqueue');
 
     const url = faker.internet.url();
     await sut.play(url);
-    expect(playSpy).toHaveBeenCalledWith(url);
+    expect(enqueueSpy).toHaveBeenCalledWith(url, { forcePlaylist: false });
   });
 
-  test('should return a song on queue.play success', async () => {
+  test('should return a result on queue.enqueue success', async () => {
     const { sut } = makeSut();
     const url = faker.internet.url();
-    const song = await sut.play(url);
-    expect(song).toBeTruthy();
-    expect(song.url).toBe(url);
+    const result = await sut.play(url);
+    expect(result).toBeTruthy();
+    expect(result.url).toBe(url);
   });
 
   test('should throw exception if queue throws exception', () => {
@@ -53,22 +53,27 @@ describe('DiscordPlayMusic', () => {
     expect(promise).rejects.toThrow();
   });
 
-  test('should call queue.playlist with correct url if playlist param is true', async () => {
+  test('should call queue.enqueue with forcePlaylist when playlist param is true', async () => {
     const { sut, discordQueue } = makeSut();
-    const playlistSpy = vi.spyOn(discordQueue, 'playlist');
+    const enqueueSpy = vi.spyOn(discordQueue, 'enqueue');
 
     const url = faker.internet.url();
     await sut.play(url, true);
-    expect(playlistSpy).toHaveBeenCalledWith(url);
+    expect(enqueueSpy).toHaveBeenCalledWith(url, { forcePlaylist: true });
   });
 
-  test('should return a playlist on queue.playlist success if playlist param is true', async () => {
-    const { sut } = makeSut();
+  test('should return a playlist-shaped result when playlist param is true', async () => {
+    const { sut, discordQueue } = makeSut();
+    vi.spyOn(discordQueue, 'enqueue').mockResolvedValueOnce({
+      url: faker.internet.url(),
+      isPlaylist: true,
+      firstTitle: 'x',
+      trackCount: 2
+    });
     const url = faker.internet.url();
-    const playlist = (await sut.play(url, true)) as Playlist;
-    expect(playlist).toBeTruthy();
-    expect(playlist.url).toBe(url);
-    expect(playlist.songs.length).toBe(2);
+    const result = await sut.play(url, true);
+    expect(result.isPlaylist).toBe(true);
+    expect(result.trackCount).toBe(2);
   });
 
   test('should call queue.join with a default voice channel when no voice channel is provided', async () => {
@@ -109,5 +114,23 @@ describe('DiscordPlayMusic', () => {
 
     await sut.play(faker.internet.url());
     expect(joinSpy).toHaveBeenCalled();
+  });
+
+  test('should still enqueue when ChatInputCommandInteraction has no matching voice channel', async () => {
+    const discordChatInputCommandInteraction = mockDiscordChatInputInteraction();
+    vi.spyOn(discordChatInputCommandInteraction, 'guild', 'get').mockReturnValueOnce({
+      channels: {
+        cache: {
+          find: () => undefined
+        }
+      }
+    } as any);
+    const { sut, discordQueue } = makeSut(mockDiscordQueue(), discordChatInputCommandInteraction);
+    const joinSpy = vi.spyOn(discordQueue, 'join');
+    const enqueueSpy = vi.spyOn(discordQueue, 'enqueue');
+
+    await sut.play(faker.internet.url());
+    expect(joinSpy).not.toHaveBeenCalled();
+    expect(enqueueSpy).toHaveBeenCalled();
   });
 });
