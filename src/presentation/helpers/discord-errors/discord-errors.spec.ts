@@ -96,8 +96,8 @@ describe('DiscordErrors', () => {
     const errorMessage = getErrorMessageFromError(new Error('SpotifyApiError:401'));
     expect(errorMessage.title).toContain('Spotify');
   });
-  test('should return YouTube Invalid URL hint', () => {
-    const errorMessage = getErrorMessageFromError(new Error('ERR_INVALID_URL'));
+  test('should return YoutubeBlocked hint', () => {
+    const errorMessage = getErrorMessageFromError(new Error('YoutubeBlocked'));
     expect(errorMessage.title).toContain('YouTube');
     expect(errorMessage.description).toContain('YOUTUBE_COOKIE');
   });

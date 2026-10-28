@@ -28,11 +28,11 @@ export const getErrorMessageFromError = (error: any): { title: string; descripti
       description: 'Could not reach Spotify. Check your credentials and try again.'
     };
   }
-  if (msg.includes('ERR_INVALID_URL') || msg.includes('Invalid URL')) {
+  if (msg === 'YoutubeBlocked') {
     return {
       title: '🎵  YouTube playback',
       description:
-        'YouTube did not return a usable audio URL (often bot/consent blocking). Set YOUTUBE_COOKIE in your environment with browser cookies for youtube.com, then restart the bot. See play-dl setToken( youtube.cookie ).'
+        'YouTube refused to serve this video (bot check or sign-in required). Set YOUTUBE_COOKIE with browser cookies for youtube.com (optionally YOUTUBE_PO_TOKEN and YOUTUBE_VISITOR_DATA), then restart the bot.'
     };
   }
 
