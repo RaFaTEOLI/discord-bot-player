@@ -21,7 +21,7 @@ import type { QueuedTrack } from '@/domain/music/queued-track';
 import { MusicRepeatMode } from '@/domain/music/repeat-mode';
 import { playerButtons, getErrorMessageFromError } from '@/presentation/helpers';
 import { getCommand } from '@/presentation/helpers/discord-commands/discord-commands';
-import { bootstrapPlayDl } from '@/infra/music/bootstrap-play-dl';
+import { bootstrapYoutubeClient } from '@/infra/music/youtube-client';
 import { createGuildMusicManager } from './factories/music/guild-music-manager-factory';
 
 const client = new Client({
@@ -57,7 +57,7 @@ let sendMusicMessage: DiscordSendMessage | null = null;
 let sendWelcomeMessage: DiscordSendMessage | null = null;
 
 void (async () => {
-  await bootstrapPlayDl();
+  await bootstrapYoutubeClient();
   await client.login(settings.token);
   setTimeout(() => {
     const musicChannel = client.channels.cache.get(process.env.BOT_MUSIC_CHANNEL);

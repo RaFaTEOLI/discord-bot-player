@@ -1,5 +1,5 @@
 /**
- * Heuristic checks for the raw cookie string passed to play-dl's `setToken({ youtube: { cookie } })`.
+ * Heuristic checks for the raw cookie string passed to youtubei.js `Innertube.create({ cookie })`.
  * Does not guarantee YouTube will accept the session — use `yarn validate:youtube-cookie` for a live probe.
  */
 export type YoutubeCookieFormatResult =

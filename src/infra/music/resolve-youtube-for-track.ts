@@ -1,5 +1,5 @@
-import play from 'play-dl';
 import type { QueuedTrack } from '@/domain/music/queued-track';
+import { searchFirstYoutubeVideo, youtubeWatchUrl } from './youtube-search';
 
 export const resolveYoutubeUrlForTrack = async (track: QueuedTrack): Promise<string> => {
   if (track.youtubeUrl) {
@@ -8,16 +8,6 @@ export const resolveYoutubeUrlForTrack = async (track: QueuedTrack): Promise<str
   if (!track.youtubeSearchQuery) {
     throw new Error('VideoUnavailable');
   }
-  const results = await play.search(track.youtubeSearchQuery, {
-    limit: 1,
-    source: { youtube: 'video' }
-  });
-  if (!results.length) {
-    throw new Error('SearchIsNull');
-  }
-  const v = results[0];
-  if (v.live) {
-    throw new Error('LiveUnsupported');
-  }
-  return v.url;
+  const v = await searchFirstYoutubeVideo(track.youtubeSearchQuery);
+  return youtubeWatchUrl(v.id);
 };

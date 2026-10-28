@@ -1,7 +1,14 @@
 import { randomUUID } from 'node:crypto';
-import play from 'play-dl';
 import type { QueuedTrack } from '@/domain/music/queued-track';
+import { classifyPlayableUrl, type SpotifyResourceKind } from '@/infra/media-url/classify-playable-url';
 import { spotifyApiGet, spotifyAuthorizedGet } from './spotify-web-api';
+import { getYoutubeClient } from './youtube-client';
+import {
+  searchFirstYoutubeVideo,
+  toYoutubeVideoSummary,
+  youtubeSummaryToTrack,
+  type YoutubeVideoSummary
+} from './youtube-search';
 
 export const SPOTIFY_NOT_CONFIGURED = 'SpotifyNotConfigured';
 
@@ -13,17 +20,6 @@ type SpotifyTrackApi = {
   external_urls?: { spotify: string };
   album?: { images?: Array<{ url: string }> };
   duration_ms: number;
-};
-
-const parseSpotifyUrl = (url: string): { kind: 'track' | 'playlist' | 'album'; id: string } | null => {
-  const u = url.trim();
-  const track = u.match(/spotify\.com\/(?:intl-[a-z]{2}\/)?track\/([a-zA-Z0-9]+)/)?.[1];
-  if (track) return { kind: 'track', id: track };
-  const playlist = u.match(/spotify\.com\/(?:intl-[a-z]{2}\/)?playlist\/([a-zA-Z0-9]+)/)?.[1];
-  if (playlist) return { kind: 'playlist', id: playlist };
-  const album = u.match(/spotify\.com\/(?:intl-[a-z]{2}\/)?album\/([a-zA-Z0-9]+)/)?.[1];
-  if (album) return { kind: 'album', id: album };
-  return null;
 };
 
 const spotifyTrackToQueued = (t: SpotifyTrackApi): QueuedTrack => {
@@ -47,27 +43,6 @@ const msToLabel = (ms: number): string => {
   const m = Math.floor(totalSec / 60);
   const s = totalSec % 60;
   return `${m}:${s.toString().padStart(2, '0')}`;
-};
-
-const youtubeVideoToTrack = (v: {
-  url: string;
-  title?: string;
-  durationRaw: string;
-  durationInSec: number;
-  thumbnails: Array<{ url: string }>;
-  channel?: { name?: string };
-}): QueuedTrack => {
-  const thumb = v.thumbnails[0]?.url ?? '';
-  return {
-    id: randomUUID(),
-    name: v.title ?? 'Unknown',
-    author: v.channel?.name ?? 'Unknown',
-    url: v.url,
-    thumbnail: thumb,
-    duration: v.durationRaw,
-    durationMs: v.durationInSec * 1000,
-    youtubeUrl: v.url
-  };
 };
 
 const fetchSpotifyTrack = async (id: string, creds: SpotifyCredentials): Promise<QueuedTrack[]> => {
@@ -143,23 +118,58 @@ const fetchSpotifyAlbum = async (
 };
 
 const resolveSpotify = async (
-  url: string,
+  resource: SpotifyResourceKind,
+  id: string,
   creds: SpotifyCredentials | null
 ): Promise<{ tracks: QueuedTrack[]; playlistName?: string }> => {
   if (!creds?.clientId || !creds.clientSecret) {
     throw new Error(SPOTIFY_NOT_CONFIGURED);
   }
-  const parsed = parseSpotifyUrl(url);
-  if (!parsed) {
-    throw new Error('InvalidSpotify');
+  if (resource === 'track') {
+    return { tracks: await fetchSpotifyTrack(id, creds) };
   }
-  if (parsed.kind === 'track') {
-    return { tracks: await fetchSpotifyTrack(parsed.id, creds) };
+  if (resource === 'playlist') {
+    return await fetchSpotifyPlaylist(id, creds);
   }
-  if (parsed.kind === 'playlist') {
-    return await fetchSpotifyPlaylist(parsed.id, creds);
+  return await fetchSpotifyAlbum(id, creds);
+};
+
+const MAX_PLAYLIST_TRACKS = 500;
+
+const resolveYoutubeVideo = async (videoId: string): Promise<QueuedTrack[]> => {
+  const yt = await getYoutubeClient();
+  const info = await yt.getBasicInfo(videoId);
+  const b = info.basic_info;
+  if (b.is_live || b.is_upcoming) {
+    throw new Error('LiveUnsupported');
   }
-  return await fetchSpotifyAlbum(parsed.id, creds);
+  return [
+    youtubeSummaryToTrack({
+      id: b.id ?? videoId,
+      title: b.title ?? 'Unknown',
+      author: b.author ?? b.channel?.name ?? 'Unknown',
+      durationSec: b.duration ?? 0,
+      isLive: false
+    })
+  ];
+};
+
+const resolveYoutubePlaylist = async (
+  playlistId: string
+): Promise<{ tracks: QueuedTrack[]; playlistName: string }> => {
+  const yt = await getYoutubeClient();
+  let page = await yt.getPlaylist(playlistId);
+  const playlistName = page.info.title ?? 'YouTube playlist';
+  const videos: YoutubeVideoSummary[] = [];
+  for (;;) {
+    for (const node of page.items) {
+      const v = toYoutubeVideoSummary(node as unknown as Parameters<typeof toYoutubeVideoSummary>[0]);
+      if (v && !v.isLive) videos.push(v);
+    }
+    if (videos.length >= MAX_PLAYLIST_TRACKS || !page.has_continuation) break;
+    page = await page.getContinuation();
+  }
+  return { tracks: videos.slice(0, MAX_PLAYLIST_TRACKS).map(youtubeSummaryToTrack), playlistName };
 };
 
 export const resolvePlayableUrl = async (
@@ -167,47 +177,17 @@ export const resolvePlayableUrl = async (
   options: { forcePlaylist?: boolean; spotify?: SpotifyCredentials | null }
 ): Promise<{ tracks: QueuedTrack[]; playlistName?: string }> => {
   void options.forcePlaylist;
-  const trimmed = url.trim();
-  const validation = await play.validate(trimmed);
-
-  const unsupported = (): Error => new Error('UnsupportedSource');
-
-  if (
-    validation === 'so_playlist' ||
-    validation === 'so_track' ||
-    (typeof validation === 'string' && validation.startsWith('dz_'))
-  ) {
-    throw unsupported();
+  const target = classifyPlayableUrl(url);
+  switch (target.kind) {
+    case 'spotify':
+      return await resolveSpotify(target.resource, target.id, options.spotify ?? null);
+    case 'youtube-video':
+      return { tracks: await resolveYoutubeVideo(target.videoId) };
+    case 'youtube-playlist':
+      return await resolveYoutubePlaylist(target.playlistId);
+    case 'search':
+      return { tracks: [youtubeSummaryToTrack(await searchFirstYoutubeVideo(target.query))] };
+    default:
+      throw new Error('UnsupportedSource');
   }
-
-  if (validation === 'sp_track' || validation === 'sp_playlist' || validation === 'sp_album') {
-    return await resolveSpotify(trimmed, options.spotify ?? null);
-  }
-
-  if (validation === 'yt_video') {
-    const info = await play.video_basic_info(trimmed);
-    const v = info.video_details;
-    if (v.live) {
-      throw new Error('LiveUnsupported');
-    }
-    return { tracks: [youtubeVideoToTrack(v)] };
-  }
-
-  if (validation === 'yt_playlist') {
-    const pl = await play.playlist_info(trimmed, { incomplete: true });
-    await pl.fetch();
-    const videos = await pl.all_videos();
-    const tracks = videos.filter(v => !v.live).map(v => youtubeVideoToTrack(v));
-    return { tracks, playlistName: pl.title ?? 'YouTube playlist' };
-  }
-
-  if (validation === 'search' || validation === false) {
-    const videos = await play.search(trimmed, { limit: 1, source: { youtube: 'video' } });
-    if (!videos.length) {
-      throw new Error('SearchIsNull');
-    }
-    return { tracks: [youtubeVideoToTrack(videos[0])] };
-  }
-
-  throw unsupported();
 };
