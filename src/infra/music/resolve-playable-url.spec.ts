@@ -56,6 +56,16 @@ describe('resolvePlayableUrl (YouTube)', () => {
     });
   });
 
+  it('uses the playlist of a watch URL when forcePlaylist is set', async () => {
+    const getPlaylist = vi.fn(async () => ({ info: { title: 'L' }, items: [playlistNode(ID)], has_continuation: false }));
+    mockClient({ getPlaylist });
+    const { playlistName } = await resolvePlayableUrl(`https://www.youtube.com/watch?v=${ID}&list=PL9`, {
+      forcePlaylist: true
+    });
+    expect(getPlaylist).toHaveBeenCalledWith('PL9');
+    expect(playlistName).toBe('L');
+  });
+
   it('rejects live videos', async () => {
     mockClient({ getBasicInfo: vi.fn(async () => ({ basic_info: { is_live: true } })) });
     await expect(resolvePlayableUrl(`https://www.youtube.com/watch?v=${ID}`, {})).rejects.toThrow('LiveUnsupported');

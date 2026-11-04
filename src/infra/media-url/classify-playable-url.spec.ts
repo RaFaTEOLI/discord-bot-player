@@ -27,6 +27,28 @@ describe('classifyPlayableUrl', () => {
     });
   });
 
+  it('resolves watch URLs with a list to the playlist when a playlist is preferred', () => {
+    expect(classifyPlayableUrl(`https://www.youtube.com/watch?v=${ID}&list=PL123`, { preferPlaylist: true })).toEqual({
+      kind: 'youtube-playlist',
+      playlistId: 'PL123'
+    });
+    expect(classifyPlayableUrl(`https://youtu.be/${ID}?list=PL123`, { preferPlaylist: true })).toEqual({
+      kind: 'youtube-playlist',
+      playlistId: 'PL123'
+    });
+  });
+
+  it('keeps mixes and list-less URLs as single videos even when a playlist is preferred', () => {
+    expect(classifyPlayableUrl(`https://www.youtube.com/watch?v=${ID}&list=RD${ID}`, { preferPlaylist: true })).toEqual({
+      kind: 'youtube-video',
+      videoId: ID
+    });
+    expect(classifyPlayableUrl(`https://www.youtube.com/watch?v=${ID}`, { preferPlaylist: true })).toEqual({
+      kind: 'youtube-video',
+      videoId: ID
+    });
+  });
+
   it('classifies playlist URLs', () => {
     expect(classifyPlayableUrl('https://www.youtube.com/playlist?list=PLabc_123')).toEqual({
       kind: 'youtube-playlist',

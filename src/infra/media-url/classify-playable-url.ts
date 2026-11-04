@@ -52,7 +52,12 @@ export const extractYoutubeVideoId = (input: string): string | null => {
   return u ? youtubeVideoIdFromUrl(u) : null;
 };
 
-export const classifyPlayableUrl = (input: string): PlayableUrl => {
+/**
+ * @param options.preferPlaylist - a `watch?v=…&list=…` link resolves to its playlist instead of the
+ * single video (the `playlist` command); auto-generated mixes (`list=RD…`) can't be fetched, so they
+ * stay single videos.
+ */
+export const classifyPlayableUrl = (input: string, options: { preferPlaylist?: boolean } = {}): PlayableUrl => {
   const trimmed = input.trim();
   const u = parseUrl(trimmed);
   if (!u) {
@@ -63,7 +68,7 @@ export const classifyPlayableUrl = (input: string): PlayableUrl => {
 
   if (host === 'youtu.be' || hostMatches(host, 'youtube.com')) {
     const list = u.searchParams.get('list');
-    if (u.pathname === '/playlist' && list) {
+    if (list && (u.pathname === '/playlist' || (options.preferPlaylist && !list.startsWith('RD')))) {
       return { kind: 'youtube-playlist', playlistId: list };
     }
     const videoId = youtubeVideoIdFromUrl(u);

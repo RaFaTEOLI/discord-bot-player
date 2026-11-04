@@ -176,8 +176,7 @@ export const resolvePlayableUrl = async (
   url: string,
   options: { forcePlaylist?: boolean; spotify?: SpotifyCredentials | null }
 ): Promise<{ tracks: QueuedTrack[]; playlistName?: string }> => {
-  void options.forcePlaylist;
-  const target = classifyPlayableUrl(url);
+  const target = classifyPlayableUrl(url, { preferPlaylist: options.forcePlaylist });
   switch (target.kind) {
     case 'spotify':
       return await resolveSpotify(target.resource, target.id, options.spotify ?? null);
