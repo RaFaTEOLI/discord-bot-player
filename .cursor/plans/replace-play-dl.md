@@ -126,7 +126,8 @@ In [discord-errors.ts](src/presentation/helpers/discord-errors/discord-errors.ts
 - Streaming: `MWEB`, `IOS`, `TV_SIMPLY` succeed for ordinary uploads; `WEB` / `ANDROID` fail to decipher, `TV` / `WEB_EMBEDDED` report the video unplayable.
 - **Label-owned music videos (e.g. VEVO / official music videos) return HTTP 403 on the media request for every client** without a cookie or PO token. These surface as `YoutubeBlocked`. Fixed by PO-token generation (section 7).
 - **With a logged-in cookie:** `IOS`, `TV_SIMPLY` and `ANDROID*` answer HTTP 400 to the player request (app clients reject cookie auth); `MWEB` and `YTMUSIC` keep working. The cookie does **not** unlock the label-owned music videos (still 403), so the default client list depends on whether a cookie is set.
-- A full 3:34 track downloads in about 3s as WebM/Opus (no throttling, no ffmpeg).
+- A full 3:34 track downloads in about 3s as WebM/Opus (no throttling).
+- Correction (found in the Docker image, which has no ffmpeg): passing `StreamType.WebmOpus` with `inlineVolume` makes @discordjs/voice choose its ffmpeg route (cost 4 vs 4.5). The stream is now demuxed in our code and handed over as `StreamType.Opus`, which needs no ffmpeg.
 - The `youtubei.js` parser logs a warning for every unknown YouTube UI node; the client sets `Log.setLevel(Log.Level.ERROR)`.
 
 ## 7. PO token generation (follow-up, done)

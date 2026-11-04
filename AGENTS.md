@@ -23,6 +23,8 @@ Entry point: `src/main/server.ts`.
 | `yarn build` | Emit `dist/` with `tsc -p tsconfig-build.json` |
 | `yarn test` | Vitest, run mode, silent |
 | `yarn test:ci` | Tests with **Istanbul coverage** and strict thresholds |
+| `yarn validate:youtube-cookie` | Live YouTube probe: metadata, audio stream, PO token status, an official music video |
+| `docker build -t discord-bot-player .` | Multi-stage image (`node:24-bookworm` build, `-slim` runtime as user `node`); no ffmpeg inside |
 
 ## Architecture (clean-ish layers)
 
@@ -78,14 +80,14 @@ Spec files use the `*.spec.ts` suffix.
 
 ## Linting and git hooks
 
-- ESLint: Standard + TypeScript (`eslint-config-standard-with-typescript`), config in `.eslintrc.json`.
+- ESLint: Standard + TypeScript (`eslint-config-standard-with-typescript`), config in `.eslintrc.json`; type information comes from `tsconfig.eslint.json` (covers `src` and `scripts`).
 - **Husky** + **lint-staged** + commit message linter are configured via `package.json` / `.lintstagedrc.json` — respect existing style when editing.
 
 ## Notable dependencies
 
 - **discord.js** — gateway, intents, interactions, channels.
-- **@discordjs/voice** — voice connection + `AudioPlayer`, driven by `GuildMusicSession` / `GuildMusicManager` in `src/infra/music/` (emits `songAdd`, `queueEnd`, etc.).
-- **youtubei.js** — YouTube search, metadata, playlists and audio streams; ESM-only, loaded lazily in `src/infra/music/youtube-client.ts` (which also installs the `node:vm` evaluator it needs to decipher stream URLs). Audio is requested as WebM/Opus so no ffmpeg is needed; other formats fall back to ffmpeg.
+- **@discordjs/voice** — voice connection + `AudioPlayer`, driven by `GuildMusicSession` / `GuildMusicManager` in `src/infra/music/` (emits `songAdd`, `queueEnd`, etc.). Note `AudioPlayer` emits state events synchronously (`stop(true)` fires Idle inside the call; a stream error emits `error` then Idle); the session guards against double-advancing, discards superseded loads, and stops the queue after 3 consecutive failures (`TooManyPlaybackFailures`).
+- **youtubei.js** — YouTube search, metadata, playlists and audio streams; ESM-only, loaded lazily in `src/infra/music/youtube-client.ts` (which also installs the `node:vm` evaluator it needs to decipher stream URLs). Audio is requested as WebM/Opus and **demuxed in `youtube-audio-resource.ts`** (prism-media), then handed to `@discordjs/voice` as raw Opus: given `WebmOpus` plus inline volume, the library would pick an ffmpeg route. Seeking drops leading 20 ms Opus packets. Only the rare non-Opus fallback needs ffmpeg, which the Docker image does not ship.
 - **bgutils-js** + **jsdom** — generate YouTube PO tokens (needed for label-owned music videos). BotGuard runs inside an isolated jsdom window, so its values come from another JS realm: mint with `typeof` checks, not bgutils' `WebPoMinter` (`instanceof` fails across realms). `src/infra/music/bgutils-js.d.ts` maps its subpath exports for the node10 module resolution.
 - **amqplib** — optional queue fan-out.
 - **isomorphic-unfetch** — HTTP from data layer implementations.
