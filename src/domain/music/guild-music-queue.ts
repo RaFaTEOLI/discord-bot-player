@@ -33,7 +33,8 @@ export interface IGuildMusicQueue {
   remove: (index: number) => void;
   move: (fromIndex: number, toIndex: number) => void;
   setPaused: (paused: boolean) => void;
-  seek: (_ms: number) => void;
+  /** Restarts the current track at `ms`; resolves false when it can't (nothing playing, out of range, unsupported format). */
+  seek: (ms: number) => Promise<boolean>;
   createProgressBar: () => ProgressBarView;
   leave: () => void;
 }

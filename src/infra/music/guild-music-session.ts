@@ -14,6 +14,10 @@ import { resolvePlayableUrl, type SpotifyCredentials } from './resolve-playable-
 import { resolveYoutubeUrlForTrack } from './resolve-youtube-for-track';
 import { createYoutubeAudioResource } from './youtube-audio-resource';
 
+/** After this many tracks fail in a row the queue is stopped instead of failing through every song. */
+export const MAX_CONSECUTIVE_FAILURES = 3;
+export const TOO_MANY_PLAYBACK_FAILURES = 'TooManyPlaybackFailures';
+
 export class GuildMusicSession implements IGuildMusicQueue {
   public voiceChannelId: string | null = null;
   private readonly tracks: QueuedTrack[] = [];
@@ -24,6 +28,16 @@ export class GuildMusicSession implements IGuildMusicQueue {
   private playing = false;
   private lastStartedId: string | null = null;
   private previousTrackSnapshot: QueuedTrack | null = null;
+  private consecutiveFailures = 0;
+  /** Set when the current resource errored; the Idle that follows drops the track. */
+  private currentTrackFailed = false;
+  /** Set around a manual `stop(true)` (skip/remove), whose synchronous Idle must not advance again. */
+  private ignoreNextIdle = false;
+  /** Bumped by every load; a load that finishes after a newer one started is discarded. */
+  private playGeneration = 0;
+  private loading = false;
+  /** Where the current resource started (seek); added to its playback duration. */
+  private startOffsetMs = 0;
 
   private readonly audioPlayer = createAudioPlayer();
 
@@ -36,11 +50,11 @@ export class GuildMusicSession implements IGuildMusicQueue {
     this.audioPlayer.on(AudioPlayerStatus.Idle, () => {
       void this.onIdle();
     });
+    // @discordjs/voice emits 'error' and then moves to Idle, so advancing is left to onIdle.
     this.audioPlayer.on('error', err => {
       console.error(err);
       this.emitPlayer('error', err, this);
-      this.tracks.shift();
-      void this.playNext();
+      this.currentTrackFailed = true;
     });
     this.audioPlayer.on('stateChange', (oldState, newState) => {
       if (newState.status !== AudioPlayerStatus.Playing || oldState.status === AudioPlayerStatus.Playing) {
@@ -48,6 +62,7 @@ export class GuildMusicSession implements IGuildMusicQueue {
       }
       const cur = this.tracks[0];
       if (!cur) return;
+      this.consecutiveFailures = 0;
       if (this.lastStartedId === null) {
         this.emitPlayer('songFirst', this, cur);
         this.previousTrackSnapshot = { ...cur };
@@ -135,7 +150,7 @@ export class GuildMusicSession implements IGuildMusicQueue {
       this.tracks.push(only);
       this.emitPlayer('songAdd', this, only);
     }
-    if (!this.playing && !this.userPaused && this.tracks.length > 0) {
+    if (!this.playing && !this.loading && !this.userPaused && this.tracks.length > 0) {
       void this.playNext();
     }
     return {
@@ -149,7 +164,7 @@ export class GuildMusicSession implements IGuildMusicQueue {
   skip(count?: number): void {
     const n = count !== undefined && Number.isInteger(count) && count > 0 ? Math.min(count, this.tracks.length) : 1;
     this.tracks.splice(0, Math.min(n, this.tracks.length));
-    this.audioPlayer.stop(true);
+    this.stopCurrentResource();
     void this.playNext();
   }
 
@@ -196,7 +211,7 @@ export class GuildMusicSession implements IGuildMusicQueue {
     if (!Number.isInteger(index) || index < 0 || index >= this.tracks.length) return;
     this.tracks.splice(index, 1);
     if (index === 0) {
-      this.audioPlayer.stop(true);
+      this.stopCurrentResource();
       void this.playNext();
     }
   }
@@ -222,20 +237,31 @@ export class GuildMusicSession implements IGuildMusicQueue {
       this.audioPlayer.pause();
     } else {
       this.audioPlayer.unpause();
-      if (!this.playing && this.tracks.length > 0) {
+      if (!this.playing && !this.loading && this.tracks.length > 0) {
         void this.playNext();
       }
     }
   }
 
-  seek(_ms: number): void {}
+  async seek(ms: number): Promise<boolean> {
+    const track = this.tracks[0];
+    if (!track || this.isDestroyed || !this.playing || !Number.isFinite(ms) || ms < 0) return false;
+    if (track.durationMs && ms >= track.durationMs) return false;
+    try {
+      // The current resource keeps playing until the new one is ready.
+      return await this.loadAndPlay(track, Math.floor(ms));
+    } catch (e) {
+      console.error(e);
+      return false;
+    }
+  }
 
   createProgressBar(): ProgressBarView {
     const cur = this.tracks[0];
     const st = this.audioPlayer.state;
     let elapsedMs = 0;
     if (st.status === AudioPlayerStatus.Playing && 'resource' in st && st.resource) {
-      elapsedMs = st.resource.playbackDuration ?? 0;
+      elapsedMs = this.startOffsetMs + (st.resource.playbackDuration ?? 0);
     }
     const totalMs = cur?.durationMs ?? 0;
     const fmt = (ms: number): string => {
@@ -276,9 +302,24 @@ export class GuildMusicSession implements IGuildMusicQueue {
     this.voiceChannelId = null;
   }
 
+  private stopCurrentResource(): void {
+    this.ignoreNextIdle = true;
+    // stop() returns false (and emits nothing) when the player is already idle.
+    if (!this.audioPlayer.stop(true)) this.ignoreNextIdle = false;
+  }
+
   private async onIdle(): Promise<void> {
+    if (this.ignoreNextIdle) {
+      this.ignoreNextIdle = false;
+      return;
+    }
     if (this.isDestroyed || this.userPaused) return;
     if (this.tracks.length === 0) return;
+    if (this.currentTrackFailed) {
+      this.currentTrackFailed = false;
+      await this.onTrackFailed();
+      return;
+    }
     this.applyRepeatAfterTrackEnd();
     if (this.tracks.length === 0) {
       this.onQueueExhausted();
@@ -299,8 +340,22 @@ export class GuildMusicSession implements IGuildMusicQueue {
     this.tracks.shift();
   }
 
+  /** Drops the failed head track (even with repeat on) and moves on, unless too many failed in a row. */
+  private async onTrackFailed(): Promise<void> {
+    this.tracks.shift();
+    this.consecutiveFailures++;
+    if (this.consecutiveFailures >= MAX_CONSECUTIVE_FAILURES && this.tracks.length > 0) {
+      this.emitPlayer('error', new Error(TOO_MANY_PLAYBACK_FAILURES), this);
+      this.tracks.length = 0;
+      this.onQueueExhausted();
+      return;
+    }
+    await this.playNext();
+  }
+
   private onQueueExhausted(): void {
     this.playing = false;
+    this.consecutiveFailures = 0;
     this.lastStartedId = null;
     this.previousTrackSnapshot = null;
     this.disconnectVoice();
@@ -314,16 +369,39 @@ export class GuildMusicSession implements IGuildMusicQueue {
       return;
     }
     const track = this.tracks[0];
+    const generation = this.playGeneration + 1;
     try {
-      const ytUrl = await resolveYoutubeUrlForTrack(track);
-      const resource = await createYoutubeAudioResource(ytUrl, this.volumePercent);
-      this.audioPlayer.play(resource);
-      this.playing = true;
+      await this.loadAndPlay(track, 0);
     } catch (e) {
+      // A newer load (skip, another playNext) superseded this one; its failure is irrelevant.
+      if (generation !== this.playGeneration || this.isDestroyed) return;
       console.error(e);
       this.emitPlayer('error', e, this);
-      this.tracks.shift();
-      await this.playNext();
+      await this.onTrackFailed();
+    }
+  }
+
+  /** Resolves and plays `track` from `startMs`. Returns false if a newer load superseded it. */
+  private async loadAndPlay(track: QueuedTrack, startMs: number): Promise<boolean> {
+    const generation = ++this.playGeneration;
+    this.loading = true;
+    try {
+      const ytUrl = await resolveYoutubeUrlForTrack(track);
+      const resource = await createYoutubeAudioResource(ytUrl, this.volumePercent, {
+        startMs,
+        preferMusicClient: track.isMusic
+      });
+      if (generation !== this.playGeneration || this.isDestroyed || this.tracks[0] !== track) {
+        resource.playStream.destroy();
+        return false;
+      }
+      this.startOffsetMs = startMs;
+      this.audioPlayer.play(resource);
+      if (this.userPaused) this.audioPlayer.pause();
+      this.playing = true;
+      return true;
+    } finally {
+      if (generation === this.playGeneration) this.loading = false;
     }
   }
 }

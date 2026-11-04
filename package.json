@@ -29,6 +29,7 @@
     "isomorphic-unfetch": "^3.1.0",
     "jsdom": "^26",
     "module-alias": "^2.2.2",
+    "prism-media": "^1.3.5",
     "tsx": "^4.7.0",
     "youtubei.js": "18.3.0"
   },

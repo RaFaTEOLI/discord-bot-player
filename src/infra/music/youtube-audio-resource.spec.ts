@@ -1,3 +1,4 @@
+import { Transform } from 'node:stream';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { StreamType } from '@discordjs/voice';
 import { createYoutubeAudioResource } from './youtube-audio-resource';
@@ -11,6 +12,31 @@ vi.mock('@discordjs/voice', async importOriginal => ({
   ...(await importOriginal<typeof import('@discordjs/voice')>()),
   createAudioResource: (stream: unknown, opts: unknown) => createAudioResource(stream, opts)
 }));
+
+// Stand-in demuxer: every input byte becomes one "Opus packet", so packet counts are deterministic.
+vi.mock('prism-media', () => ({
+  default: {
+    opus: {
+      WebmDemuxer: class extends Transform {
+        constructor () {
+          super({ readableObjectMode: true });
+        }
+
+        _transform (chunk: Buffer, _enc: string, cb: () => void): void {
+          for (const byte of chunk) this.push(Buffer.from([byte]));
+          cb();
+        }
+      }
+    }
+  }
+}));
+
+const readPackets = async (): Promise<number[]> => {
+  const stream = createAudioResource.mock.calls[0][0] as AsyncIterable<Buffer>;
+  const bytes: number[] = [];
+  for await (const packet of stream) bytes.push(...packet);
+  return bytes;
+};
 
 vi.mock('./youtube-client', () => ({
   getYoutubeClient: vi.fn(),
@@ -68,7 +94,8 @@ describe('createYoutubeAudioResource', () => {
     await createYoutubeAudioResource(`https://youtu.be/${ID}`, 150);
     expect(getInfo).toHaveBeenCalledWith(ID, { client: 'MWEB', po_token: undefined });
     expect(info.download).toHaveBeenCalledWith(expect.objectContaining({ format: 'webm', codec: 'opus' }));
-    expect(createAudioResource.mock.calls[0][1]).toEqual({ inputType: StreamType.WebmOpus, inlineVolume: true });
+    // Demuxed here, so @discordjs/voice gets raw Opus and never routes through ffmpeg.
+    expect(createAudioResource.mock.calls[0][1]).toEqual({ inputType: StreamType.Opus, inlineVolume: true });
     expect(setVolume).toHaveBeenCalledWith(1.5);
   });
 
@@ -81,10 +108,40 @@ describe('createYoutubeAudioResource', () => {
   it('keeps every chunk, including the primed first one', async () => {
     mockGetInfo(makeInfo({ download: vi.fn(async () => webStream([new Uint8Array([1]), new Uint8Array([2, 3])])) }));
     await createYoutubeAudioResource(ID, 100);
-    const stream = createAudioResource.mock.calls[0][0] as AsyncIterable<Buffer>;
-    const bytes: number[] = [];
-    for await (const chunk of stream) bytes.push(...chunk);
-    expect(bytes).toEqual([1, 2, 3]);
+    expect(await readPackets()).toEqual([1, 2, 3]);
+  });
+
+  it('starts at an offset by dropping 20 ms Opus packets', async () => {
+    mockGetInfo(makeInfo({ download: vi.fn(async () => webStream([new Uint8Array([1, 2]), new Uint8Array([3, 4])])) }));
+    await createYoutubeAudioResource(ID, 100, { startMs: 59 });
+    expect(await readPackets()).toEqual([3, 4]);
+  });
+
+  it('refuses to seek in a non-Opus stream without trying other clients', async () => {
+    const getInfo = mockGetInfo(
+      makeInfo({
+        chooseFormat: vi.fn(() => {
+          throw new Error('No matching formats found');
+        })
+      })
+    );
+    await expect(createYoutubeAudioResource(ID, 100, { startMs: 1000 })).rejects.toThrow('SeekUnsupported');
+    expect(getInfo).toHaveBeenCalledTimes(1);
+  });
+
+  it('tries the music client first for music when a video-bound token exists', async () => {
+    vi.mocked(getPoTokenMinter).mockResolvedValue({ mint: async () => 'tok', expiresAt: Infinity });
+    vi.mocked(getYoutubeStreamClients).mockReturnValue(['MWEB', 'YTMUSIC', 'IOS']);
+    const getInfo = mockGetInfo(makeInfo());
+    await createYoutubeAudioResource(ID, 100, { preferMusicClient: true });
+    expect(getInfo).toHaveBeenCalledWith(ID, { client: 'YTMUSIC', po_token: 'tok' });
+  });
+
+  it('keeps the configured order for music without a token', async () => {
+    vi.mocked(getYoutubeStreamClients).mockReturnValue(['MWEB', 'YTMUSIC']);
+    const getInfo = mockGetInfo(makeInfo());
+    await createYoutubeAudioResource(ID, 100, { preferMusicClient: true });
+    expect(getInfo).toHaveBeenCalledWith(ID, { client: 'MWEB', po_token: undefined });
   });
 
   it('falls back to any format (ffmpeg) when there is no Opus stream', async () => {

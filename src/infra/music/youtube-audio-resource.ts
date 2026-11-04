@@ -1,13 +1,16 @@
-import { Readable } from 'node:stream';
+import { pipeline, Readable, Transform } from 'node:stream';
 import type { ReadableStream as NodeWebReadableStream } from 'node:stream/web';
 import { createAudioResource, StreamType } from '@discordjs/voice';
+import prism from 'prism-media';
 import type { Innertube, Types } from 'youtubei.js';
 import { extractYoutubeVideoId } from '@/infra/media-url/classify-playable-url';
 import { toYoutubeFailureCode, VIDEO_UNAVAILABLE, YOUTUBE_BLOCKED } from '@/infra/media-url/youtube-failure';
 import { getYoutubeClient, getYoutubeStreamClients } from './youtube-client';
 import { getPoTokenMinter, withStreamPoToken } from './youtube-po-token';
 
-/** WebM/Opus is demuxed by prism-media, so no ffmpeg is needed on the host. */
+export const SEEK_UNSUPPORTED = 'SeekUnsupported';
+
+/** WebM/Opus is demuxed here (see `toResource`), so no ffmpeg is needed on the host. */
 const OPUS_AUDIO: Types.DownloadOptions = { type: 'audio', quality: 'best', format: 'webm', codec: 'opus' };
 /** Any audio container; `StreamType.Arbitrary` makes @discordjs/voice transcode with ffmpeg. */
 const ANY_AUDIO: Types.DownloadOptions = { type: 'audio', quality: 'best', format: 'any' };
@@ -17,8 +20,19 @@ const ANY_AUDIO: Types.DownloadOptions = { type: 'audio', quality: 'best', forma
  * rejected with 403). Found by live probing; other clients use the session token, if any.
  */
 const CONTENT_BOUND_STREAM_CLIENTS = new Set<Types.InnerTubeClient>(['YTMUSIC']);
+/** Serves label-owned music with a video-bound token, but refuses many ordinary uploads. */
+const MUSIC_CLIENT: Types.InnerTubeClient = 'YTMUSIC';
+/** YouTube's Opus audio uses 20 ms frames. */
+const OPUS_FRAME_MS = 20;
 
 type AudioResource = ReturnType<typeof createAudioResource>;
+
+export type YoutubeAudioOptions = {
+  /** Start this far into the track (WebM/Opus only; otherwise `SeekUnsupported`). */
+  startMs?: number;
+  /** The track is known to be music (Spotify, YouTube category "Music"): try the music client first. */
+  preferMusicClient?: boolean;
+};
 
 const openAudioStream = async (
   yt: Innertube,
@@ -72,13 +86,58 @@ const primeStream = async (web: NodeWebReadableStream<Uint8Array>): Promise<Read
   return Readable.from(chunks(), { objectMode: false });
 };
 
+/** Drops the first `count` Opus packets, which is how a start offset is applied without ffmpeg. */
+const skipOpusPackets = (count: number): Transform => {
+  let remaining = count;
+  return new Transform({
+    objectMode: true,
+    transform (packet, _encoding, callback) {
+      if (remaining > 0) {
+        remaining--;
+        callback();
+      } else {
+        callback(null, packet);
+      }
+    }
+  });
+};
+
+/**
+ * WebM/Opus is demuxed here and handed over as raw Opus packets: given `WebmOpus` plus inline
+ * volume, @discordjs/voice prefers an ffmpeg route, while from `Opus` it can only use the
+ * opus decoder → volume → encoder pipeline, which needs no ffmpeg.
+ */
+const toResource = (stream: Readable, type: StreamType, volumePercent: number, startMs: number): AudioResource => {
+  let input: Readable = stream;
+  let inputType = type;
+  if (type === StreamType.WebmOpus) {
+    const stages: NodeJS.ReadWriteStream[] = [new prism.opus.WebmDemuxer()];
+    if (startMs > 0) stages.push(skipOpusPackets(Math.floor(startMs / OPUS_FRAME_MS)));
+    // pipeline() forwards a download error to the last stream, where the AudioPlayer sees it.
+    input = pipeline([stream, ...stages], () => undefined) as unknown as Readable;
+    inputType = StreamType.Opus;
+  } else if (startMs > 0) {
+    stream.destroy();
+    throw new Error(SEEK_UNSUPPORTED);
+  }
+  const resource = createAudioResource(input, { inputType, inlineVolume: true });
+  resource.volume?.setVolume(Math.min(2, Math.max(0, volumePercent / 100)));
+  return resource;
+};
+
+const orderClients = (clients: Types.InnerTubeClient[], preferMusicClient: boolean): Types.InnerTubeClient[] =>
+  preferMusicClient && clients.includes(MUSIC_CLIENT)
+    ? [MUSIC_CLIENT, ...clients.filter(c => c !== MUSIC_CLIENT)]
+    : clients;
+
 /**
  * Opens a YouTube audio stream, trying each configured InnerTube client in order
  * (which clients YouTube serves playable formats to changes over time).
  */
 export const createYoutubeAudioResource = async (
   youtubeUrl: string,
-  volumePercent: number
+  volumePercent: number,
+  options: YoutubeAudioOptions = {}
 ): Promise<AudioResource> => {
   const videoId = typeof youtubeUrl === 'string' ? extractYoutubeVideoId(youtubeUrl) : null;
   if (!videoId) {
@@ -89,15 +148,15 @@ export const createYoutubeAudioResource = async (
   const minter = await getPoTokenMinter(yt);
   const contentToken = minter ? await minter.mint(videoId).catch(() => undefined) : undefined;
 
+  // The music client only helps when it can send a video-bound token.
+  const clients = orderClients(getYoutubeStreamClients(), Boolean(options.preferMusicClient && contentToken));
   const failures: Array<{ client: string; code: string; message: string }> = [];
-  for (const client of getYoutubeStreamClients()) {
+  for (const client of clients) {
     try {
       const { stream, type } = await openAudioStream(yt, videoId, client, contentToken);
-      const resource = createAudioResource(stream, { inputType: type, inlineVolume: true });
-      resource.volume?.setVolume(Math.min(2, Math.max(0, volumePercent / 100)));
-      return resource;
+      return toResource(stream, type, volumePercent, options.startMs ?? 0);
     } catch (err) {
-      if (err instanceof Error && err.message === 'LiveUnsupported') throw err;
+      if (err instanceof Error && (err.message === 'LiveUnsupported' || err.message === SEEK_UNSUPPORTED)) throw err;
       failures.push({ client, code: toYoutubeFailureCode(err), message: err instanceof Error ? err.message : String(err) });
     }
   }

@@ -80,6 +80,8 @@ const handleCommands = async (
 ): Promise<void> => {
   if (message) {
     const { args, command } = getCommand(message);
+    // `args` is the whole argument string; numeric commands need its words.
+    const [firstArg] = args.split(/\s+/).filter(Boolean);
 
     console.info(`Command received: ${command}`);
     console.info(`Arguments received: ${args}`);
@@ -161,10 +163,13 @@ const handleCommands = async (
       }
 
       if (command === 'seek') {
-        guildQueue?.seek(parseInt(args[0]) * 1000);
+        const seconds = Number(firstArg);
+        const seeked = guildQueue && Number.isFinite(seconds) ? await guildQueue.seek(seconds * 1000) : false;
         await sendMusicMessage?.send({
           title: '🎵  Seek',
-          description: 'Seek is not supported in this version of the player.'
+          description: seeked
+            ? `Jumped to ${Math.floor(seconds / 60)}:${(Math.floor(seconds) % 60).toString().padStart(2, '0')}.`
+            : 'Could not seek in the current song.'
         });
         return;
       }

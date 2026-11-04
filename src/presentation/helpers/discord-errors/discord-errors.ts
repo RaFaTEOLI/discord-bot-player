@@ -28,6 +28,13 @@ export const getErrorMessageFromError = (error: any): { title: string; descripti
       description: 'Could not reach Spotify. Check your credentials and try again.'
     };
   }
+  if (msg === 'TooManyPlaybackFailures') {
+    return {
+      title: '🎵  Playback stopped',
+      description:
+        'Several songs in a row failed to play, so the queue was stopped. YouTube may be blocking the bot; try again later or check YOUTUBE_COOKIE.'
+    };
+  }
   if (msg === 'YoutubeBlocked') {
     return {
       title: '🎵  YouTube playback',

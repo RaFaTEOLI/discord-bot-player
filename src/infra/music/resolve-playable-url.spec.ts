@@ -56,6 +56,12 @@ describe('resolvePlayableUrl (YouTube)', () => {
     });
   });
 
+  it('marks videos in the Music category as music', async () => {
+    mockClient({ getBasicInfo: vi.fn(async () => ({ basic_info: { id: ID, category: 'Music' } })) });
+    const { tracks } = await resolvePlayableUrl(`https://youtu.be/${ID}`, {});
+    expect(tracks[0].isMusic).toBe(true);
+  });
+
   it('uses the playlist of a watch URL when forcePlaylist is set', async () => {
     const getPlaylist = vi.fn(async () => ({ info: { title: 'L' }, items: [playlistNode(ID)], has_continuation: false }));
     mockClient({ getPlaylist });

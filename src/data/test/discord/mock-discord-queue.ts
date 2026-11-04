@@ -46,7 +46,9 @@ export const mockDiscordQueue = (): IGuildMusicQueue => {
 
     setPaused(_paused: boolean): void {}
 
-    seek(_ms: number): void {}
+    async seek(_ms: number): Promise<boolean> {
+      return false;
+    }
 
     createProgressBar(): ProgressBarView {
       return {

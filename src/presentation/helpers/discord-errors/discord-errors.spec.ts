@@ -96,6 +96,11 @@ describe('DiscordErrors', () => {
     const errorMessage = getErrorMessageFromError(new Error('SpotifyApiError:401'));
     expect(errorMessage.title).toContain('Spotify');
   });
+  test('should return TooManyPlaybackFailures message', () => {
+    const errorMessage = getErrorMessageFromError(new Error('TooManyPlaybackFailures'));
+    expect(errorMessage.title).toContain('Playback stopped');
+    expect(errorMessage.description).toContain('queue was stopped');
+  });
   test('should return YoutubeBlocked hint', () => {
     const errorMessage = getErrorMessageFromError(new Error('YoutubeBlocked'));
     expect(errorMessage.title).toContain('YouTube');

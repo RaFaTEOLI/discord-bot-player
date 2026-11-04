@@ -34,7 +34,8 @@ const spotifyTrackToQueued = (t: SpotifyTrackApi): QueuedTrack => {
     thumbnail: thumb,
     duration: msToLabel(t.duration_ms),
     durationMs: t.duration_ms,
-    youtubeSearchQuery: query
+    youtubeSearchQuery: query,
+    isMusic: true
   };
 };
 
@@ -109,7 +110,8 @@ const fetchSpotifyAlbum = async (
         thumbnail: thumb,
         duration: msToLabel(t.duration_ms),
         durationMs: t.duration_ms,
-        youtubeSearchQuery: query
+        youtubeSearchQuery: query,
+        isMusic: true
       });
     }
     next = page.next;
@@ -143,15 +145,14 @@ const resolveYoutubeVideo = async (videoId: string): Promise<QueuedTrack[]> => {
   if (b.is_live || b.is_upcoming) {
     throw new Error('LiveUnsupported');
   }
-  return [
-    youtubeSummaryToTrack({
-      id: b.id ?? videoId,
-      title: b.title ?? 'Unknown',
-      author: b.author ?? b.channel?.name ?? 'Unknown',
-      durationSec: b.duration ?? 0,
-      isLive: false
-    })
-  ];
+  const track = youtubeSummaryToTrack({
+    id: b.id ?? videoId,
+    title: b.title ?? 'Unknown',
+    author: b.author ?? b.channel?.name ?? 'Unknown',
+    durationSec: b.duration ?? 0,
+    isLive: false
+  });
+  return [b.category === 'Music' ? { ...track, isMusic: true } : track];
 };
 
 const resolveYoutubePlaylist = async (
