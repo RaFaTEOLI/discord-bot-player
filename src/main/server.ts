@@ -81,7 +81,7 @@ const handleCommands = async (
   if (message) {
     const { args, command } = getCommand(message);
     // `args` is the whole argument string; numeric commands need its words.
-    const [firstArg] = args.split(/\s+/).filter(Boolean);
+    const [firstArg, secondArg] = args.split(/\s+/).filter(Boolean);
 
     console.info(`Command received: ${command}`);
     console.info(`Arguments received: ${args}`);
@@ -158,7 +158,7 @@ const handleCommands = async (
       }
 
       if (command === 'setVolume') {
-        guildQueue?.setVolume(parseInt(args[0]));
+        guildQueue?.setVolume(parseInt(firstArg));
         return;
       }
 
@@ -268,7 +268,7 @@ const handleCommands = async (
       }
 
       if (command === 'remove') {
-        guildQueue?.remove(parseInt(args[0]));
+        guildQueue?.remove(parseInt(firstArg));
         return;
       }
 
@@ -286,7 +286,7 @@ const handleCommands = async (
       }
 
       if (command === 'move') {
-        guildQueue?.move(parseInt(args[0]), parseInt(args[1]));
+        guildQueue?.move(parseInt(firstArg), parseInt(secondArg));
       }
     }
 
