@@ -19,7 +19,7 @@ const firstAudio = async (videoId: string): Promise<void> => {
 
 void (async (): Promise<void> => {
   const format = validateYoutubeCookieFormat(readYoutubeCookie());
-  if (format.ok === false) {
+  if ('reason' in format) {
     console.error(`[validate:youtube-cookie] ${format.reason}`);
     process.exit(1);
   }
