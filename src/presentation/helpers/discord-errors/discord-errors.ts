@@ -22,6 +22,14 @@ export const getErrorMessageFromError = (error: any): { title: string; descripti
       description: 'That does not look like a supported music URL.'
     };
   }
+  if (msg === 'SpotifyApiError:404') {
+    // Spotify's API hides its own playlists (Daily Mix, Radio, editorial: IDs starting with 37i9dQZF) from apps.
+    return {
+      title: '🎵  Spotify link not available',
+      description:
+        'Spotify does not let bots read this link. Playlists made by Spotify (Daily Mix, Radio, editorial) and private playlists are blocked; try a playlist made by a user, a song or an album.'
+    };
+  }
   if (msg === 'SpotifyAuthFailed' || msg.startsWith('SpotifyApiError:')) {
     return {
       title: '🎵  Spotify error',

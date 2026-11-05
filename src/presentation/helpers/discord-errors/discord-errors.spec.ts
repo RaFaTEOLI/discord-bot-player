@@ -95,6 +95,12 @@ describe('DiscordErrors', () => {
   test('should return SpotifyApiError error message', () => {
     const errorMessage = getErrorMessageFromError(new Error('SpotifyApiError:401'));
     expect(errorMessage.title).toContain('Spotify');
+    expect(errorMessage.description).toContain('credentials');
+  });
+  test('should explain that Spotify-made playlists cannot be read on a 404', () => {
+    const errorMessage = getErrorMessageFromError(new Error('SpotifyApiError:404'));
+    expect(errorMessage.title).toBe('🎵  Spotify link not available');
+    expect(errorMessage.description).toContain('Playlists made by Spotify');
   });
   test('should return TooManyPlaybackFailures message', () => {
     const errorMessage = getErrorMessageFromError(new Error('TooManyPlaybackFailures'));
