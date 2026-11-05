@@ -24,6 +24,11 @@ import { getCommand } from '@/presentation/helpers/discord-commands/discord-comm
 import { bootstrapYoutubeClient } from '@/infra/music/youtube-client';
 import { createGuildMusicManager } from './factories/music/guild-music-manager-factory';
 
+// A failed side effect (API sync, a Discord message) must not take the whole bot down.
+process.on('unhandledRejection', reason => {
+  console.error('Unhandled rejection:', reason);
+});
+
 const client = new Client({
   intents: [
     GatewayIntentBits.Guilds,
@@ -73,6 +78,15 @@ void (async () => {
 })();
 
 const remoteSaveQueue = makeRemoteSaveQueueFactory();
+
+/** The remote API only mirrors state for the dashboard: when it is down, log and keep playing. */
+const persist = async (saving: Promise<void>): Promise<void> => {
+  try {
+    await saving;
+  } catch (error) {
+    console.warn(`[api] Could not sync with the API server: ${(error as Error)?.message ?? String(error)}`);
+  }
+};
 
 const handleCommands = async (
   message: Message | ButtonInteraction | ChatInputCommandInteraction,
@@ -185,13 +199,13 @@ const handleCommands = async (
       }
 
       if (command === 'getQueue') {
-        console.info(`Getting guild queue -> ${guildQueue}`);
+        console.info(`Getting guild queue for guild ${guildQueue?.guildId}.`);
 
         const messageObj = {
           title: '🎵  Queue'
         };
 
-        await remoteSaveQueue.save({ songs: mapQueue(guildQueue?.songs ?? []) });
+        await persist(remoteSaveQueue.save({ songs: mapQueue(guildQueue?.songs ?? []) }));
 
         const fields: any = [];
         guildQueue?.songs.forEach((song, i) => {
@@ -358,15 +372,15 @@ const mapQueue = (songs: QueuedTrack[]): Queue =>
 
 music
   .on('channelEmpty', async queue => {
-    console.info(`Everyone left the Voice Channel, queue ended. -> ${queue}`);
+    console.info(`Everyone left the Voice Channel, queue ended. Guild: ${queue.guildId}`);
     await sendMusicMessage?.send({
       title: '🎵  Everyone left the Voice Channel, queue ended.'
     });
-    await remoteSaveMusic.save({ name: null, duration: null });
-    await remoteSaveQueue.save({ songs: [] });
+    await persist(remoteSaveMusic.save({ name: null, duration: null }));
+    await persist(remoteSaveQueue.save({ songs: [] }));
   })
   .on('songAdd', async (queue, song: QueuedTrack) => {
-    console.info(`Song ${song} was added to the queue. -> ${queue}`);
+    console.info(`Song ${song.name} was added to the queue in guild ${queue.guildId}.`);
     await sendMusicMessage?.send({
       title: '🎵  Song added to the queue.',
       fields: {
@@ -374,7 +388,7 @@ music
         value: song.name
       }
     });
-    await remoteSaveQueue.save({ songs: mapQueue(queue.songs) });
+    await persist(remoteSaveQueue.save({ songs: mapQueue(queue.songs) }));
   })
   .on('playlistAdd', async (queue, playlist: { name: string; songs: QueuedTrack[] }) => {
     console.info(`Playlist ${playlist.name} with ${playlist?.songs?.length} songs was added to the queue.`);
@@ -382,25 +396,25 @@ music
       title: '🎵  Playlist Added!',
       description: `Playlist ${playlist.name} with ${playlist?.songs?.length} songs was added to the queue.`
     });
-    await remoteSaveQueue.save({ songs: mapQueue(queue.songs) });
+    await persist(remoteSaveQueue.save({ songs: mapQueue(queue.songs) }));
   })
   .on('queueDestroyed', async queue => {
-    console.info(`The queue was destroyed. -> ${queue}`);
+    console.info(`The queue was destroyed. Guild: ${queue.guildId}`);
     await sendMusicMessage?.send({
       title: '🎵  Queue was destroyed.'
     });
-    await remoteSaveQueue.save({ songs: [] });
+    await persist(remoteSaveQueue.save({ songs: [] }));
   })
   .on('queueEnd', async queue => {
-    console.info(`The queue has ended. -> ${queue}`);
+    console.info(`The queue has ended. Guild: ${queue.guildId}`);
     await sendMusicMessage?.send({
       title: '🎵  The queue has ended.'
     });
-    await remoteSaveMusic.save({ name: null, duration: null });
-    await remoteSaveQueue.save({ songs: [] });
+    await persist(remoteSaveMusic.save({ name: null, duration: null }));
+    await persist(remoteSaveQueue.save({ songs: [] }));
   })
   .on('songChanged', async (queue, newSong: QueuedTrack, _oldSong: QueuedTrack | null) => {
-    console.info(`${newSong} is now playing`);
+    console.info(`${newSong.name} is now playing in guild ${queue.guildId}.`);
     await sendMusicMessage?.send({
       title: '🎵  Now Playing',
       fields: {
@@ -409,11 +423,11 @@ music
       },
       buttons: playerButtons
     });
-    await remoteSaveMusic.save({ name: newSong.name, duration: newSong.duration });
-    await remoteSaveQueue.save({ songs: mapQueue(queue.songs) });
+    await persist(remoteSaveMusic.save({ name: newSong.name, duration: newSong.duration }));
+    await persist(remoteSaveQueue.save({ songs: mapQueue(queue.songs) }));
   })
   .on('songFirst', async (queue, song: QueuedTrack) => {
-    console.info(`Started Playing ${song}`);
+    console.info(`Started playing ${song.name} in guild ${queue.guildId}.`);
     await sendMusicMessage?.send({
       title: '🎵  Started Playing',
       fields: {
@@ -422,18 +436,18 @@ music
       },
       buttons: playerButtons
     });
-    await remoteSaveMusic.save({ name: song.name, duration: song.duration });
+    await persist(remoteSaveMusic.save({ name: song.name, duration: song.duration }));
   })
   .on('clientDisconnect', async queue => {
-    console.info(`I was kicked from the Voice Channel, queue ended. -> ${queue}`);
+    console.info(`I was kicked from the Voice Channel, queue ended. Guild: ${queue.guildId}`);
     await sendMusicMessage?.send({
       title: '😞  I was kicked from the Voice Channel, queue ended.'
     });
-    await remoteSaveMusic.save({ name: null, duration: null });
-    await remoteSaveQueue.save({ songs: [] });
+    await persist(remoteSaveMusic.save({ name: null, duration: null }));
+    await persist(remoteSaveQueue.save({ songs: [] }));
   })
   .on('clientUndeafen', async queue => {
-    console.info(`I got undefeanded. -> ${queue}`);
+    console.info(`I got undefeanded. Guild: ${queue.guildId}`);
     await sendMusicMessage?.send({
       title: '🎵  I got undefeanded.'
     });
